@@ -1,0 +1,14 @@
+{
+  "name": "just-act-now-server",
+  "version": "0.1.0",
+  "description": "just.act.now icin TikTok/Instagram otomatik yayin sunucusu (iskelet, henuz calismiyor).",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5"
+  }
+}

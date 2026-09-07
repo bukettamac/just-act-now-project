@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>just.act.now — Yazılım</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Montserrat:wght@700;800&family=Bebas+Neue&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#141414; --panel2:#1c1c1c; --line:#2a2a2a;
+    --white:#f5f5f5; --dim:#8a8a8a; --green:#8dc63f; --green-dark:#5f8c28; --danger:#c65f5f;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; background:var(--bg); color:var(--white); min-height:100vh; }
+  h1{ font-size:18px; letter-spacing:0.3px; margin:0; }
+  h1 span{ color:var(--green); }
+  .sub{ color:var(--dim); font-size:13px; margin:0 0 20px 0; }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+    padding:16px 24px; border-bottom:1px solid var(--line);
+    background:rgba(10,10,10,0.92); backdrop-filter:blur(6px);
+  }
+  .tabs{ display:flex; gap:8px; flex-wrap:wrap; }
+  .tab-btn{
+    font-family:inherit; cursor:pointer; border:1px solid var(--line); background:var(--panel2);
+    color:var(--dim); padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600;
+  }
+  .tab-btn.active{ background:var(--green); color:#0a0a0a; border-color:var(--green); }
+
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---------- HOME (dashboard) ---------- */
+  #view-home.active{ display:block; padding:28px; }
+  .dashboard-wrap{ max-width:1100px; }
+  .dash-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-top:18px;
+  }
+  .dash-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px;
+    display:flex; gap:12px; align-items:flex-start;
+  }
+  .dash-card.urgent{ border-color:rgba(198,95,95,0.5); background:rgba(198,95,95,0.06); }
+  .dash-card.positive{ border-color:rgba(141,198,63,0.4); background:rgba(141,198,63,0.06); }
+  .dash-icon{ font-size:22px; line-height:1; }
+  .dash-title{ font-size:13.5px; font-weight:700; color:var(--white); line-height:1.4; }
+  .dash-sub{ font-size:11.5px; color:var(--dim); margin-top:4px; }
+  .dash-empty{ color:var(--dim); font-size:13px; grid-column:1/-1; text-align:center; padding:40px 0; }
+
+  /* ---------- ANALYTICS ---------- */
+  #view-analytics.active{ display:block; padding:28px; }
+  .stats-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .stats-table th{ text-align:left; color:var(--dim); font-weight:600; font-size:11px; padding:6px 8px; border-bottom:1px solid var(--line); }
+  .stats-table td{ padding:8px; border-bottom:1px solid var(--line); }
+  .stats-table tr:last-child td{ border-bottom:none; }
+
+  /* ---------- EDITOR LAYOUT ---------- */
+  #view-editor.active{ display:flex; flex-wrap:wrap; gap:28px; padding:28px; max-width:1360px; margin:0 auto; }
+  .stage-col{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .canvas-wrap{ position:relative; width:290px; aspect-ratio: 9/16; background:#000; border-radius:14px; overflow:hidden; box-shadow: 0 0 0 1px var(--line), 0 20px 40px rgba(0,0,0,0.5); }
+  canvas{ width:100%; height:100%; display:block; }
+  .transport{ display:flex; gap:8px; }
+  button{ font-family:inherit; cursor:pointer; border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600; transition: transform .08s ease, opacity .15s ease; }
+  button:active{ transform: scale(0.96); }
+  button:disabled{ opacity:0.4; cursor:not-allowed; transform:none; }
+  .btn-primary{ background:var(--green); color:#0a0a0a; }
+  .btn-secondary{ background:var(--panel2); color:var(--white); border:1px solid var(--line); }
+  .btn-danger{ background:transparent; color:var(--danger); border:1px solid var(--danger); }
+  .status{ font-size:12px; color:var(--dim); min-height:16px; text-align:center; max-width:290px; transition:color .15s ease; }
+  .status.status-ok{ color:var(--green); }
+  .status.status-err{ color:var(--danger); }
+  .panel-col{
+    flex:1 1 640px; max-width:900px; display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr)); gap:14px; align-content:start;
+  }
+  @media (max-width: 860px){
+    .panel-col{ grid-template-columns: 1fr; }
+  }
+  .card.wide{ grid-column:1/-1; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  .card h2{ font-size:13px; margin:0 0 12px 0; color:var(--white); display:flex; align-items:center; gap:8px; }
+  #view-editor .card h2{ cursor:pointer; user-select:none; }
+  #view-editor .card h2::after{ content:'▾'; margin-left:auto; color:var(--dim); font-size:11px; }
+  #view-editor .card.collapsed h2::after{ content:'▸'; }
+  #view-editor .card.collapsed h2{ margin-bottom:0; }
+  #view-editor .card.collapsed > *:not(h2){ display:none !important; }
+  .drag-handle{
+    cursor:grab; color:var(--dim); font-size:15px; line-height:1; touch-action:none;
+    padding:2px 4px; margin:-2px -2px -2px -6px; border-radius:4px;
+  }
+  .drag-handle:hover{ color:var(--white); background:var(--panel2); }
+  #view-editor .card.dragging{ opacity:0.4; }
+  #view-editor .card.drop-target{ outline:2px dashed var(--green); outline-offset:2px; }
+  .card h2 .tag{ font-size:11px; color:var(--dim); font-weight:400; }
+  select, textarea, input[type=text], input[type=file]{ width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:8px; color:var(--white); padding:9px 10px; font-size:13px; font-family:inherit; }
+  textarea{ resize:vertical; min-height:56px; }
+  label.field{ display:block; font-size:12px; color:var(--dim); margin-bottom:6px; margin-top:12px; }
+  label.field:first-child{ margin-top:0; }
+  .animal-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px; max-height:280px; overflow-y:auto; padding-right:2px; }
+  .animal-opt{ background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 6px; text-align:center; cursor:pointer; font-size:12px; line-height:1.3; }
+  .animal-opt .emoji{ font-size:24px; display:block; margin-bottom:4px; }
+  .animal-opt.active{ border-color:var(--green); background:rgba(141,198,63,0.12); }
+  .animal-opt .blurb{ color:var(--dim); font-size:10.5px; display:block; margin-top:2px; }
+  .effect-item{ background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-top:8px; }
+  .effect-item-header{ display:flex; align-items:center; justify-content:space-between; font-size:13px; }
+  .fx-gear{ background:transparent; border:1px solid var(--line); color:var(--dim); width:26px; height:26px; border-radius:6px; padding:0; font-size:13px; }
+  .effect-item-controls{ margin-top:4px; }
+  .effect-item-controls label.field{ font-size:11px; }
+  .toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; font-size:13px; border-bottom:1px solid var(--line); }
+  .toggle-row-h{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .toggle-chip{
+    display:flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line);
+    border-radius:20px; padding:7px 12px 7px 14px; font-size:12.5px;
+  }
+  .toggle-row:last-child{ border-bottom:none; }
+  .switch{ position:relative; width:38px; height:22px; background:var(--panel2); border:1px solid var(--line); border-radius:20px; cursor:pointer; flex-shrink:0; }
+  .switch.on{ background:var(--green-dark); }
+  .switch .dot{ position:absolute; top:2px; left:2px; width:16px; height:16px; background:var(--white); border-radius:50%; transition:left .15s ease; }
+  .switch.on .dot{ left:18px; background:#0a0a0a; }
+  .stat-row{ display:flex; gap:10px; margin-bottom:14px; }
+  .stat-box{ flex:1; background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px; text-align:center; }
+  .stat-box .num{ font-size:20px; font-weight:700; }
+  .stat-box .txtnum{ font-size:13px; font-weight:700; word-break:break-word; }
+  .stat-box .lbl{ font-size:10.5px; color:var(--dim); margin-top:2px; }
+  .stat-box.used .num{ color:var(--green); }
+  .stat-section-title{ font-size:11px; color:var(--dim); margin:14px 0 8px 0; }
+  .stat-section-title:first-child{ margin-top:0; }
+  .quote-list, .song-list{ display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; margin-top:12px; }
+  .quote-item, .song-item{ background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .quote-item.used{ opacity:0.55; }
+  .song-item.active{ border-color:var(--green); background:rgba(141,198,63,0.08); }
+  .quote-item .txt{ font-size:12.5px; line-height:1.4; margin-bottom:8px; word-break:break-word; }
+  .quote-item .row, .song-item .row{ display:flex; gap:6px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .quote-item .badge{ font-size:10px; padding:2px 7px; border-radius:20px; }
+  .badge.unused{ background:rgba(141,198,63,0.15); color:var(--green); }
+  .badge.used{ background:rgba(150,150,150,0.15); color:var(--dim); }
+  .badge.active-badge{ background:rgba(141,198,63,0.2); color:var(--green); }
+  .quote-item .actions, .song-item .actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .mini-btn{ padding:6px 10px; font-size:11px; border-radius:6px; }
+  .empty-note{ color:var(--dim); font-size:12px; text-align:center; padding:14px 0; }
+  .note{ font-size:11.5px; color:var(--dim); line-height:1.5; margin-top:10px; }
+  .song-name-input{ font-size:12.5px; font-weight:600; padding:6px 8px; margin-bottom:6px; }
+  .song-meta{ font-size:10.5px; color:var(--dim); }
+  ::-webkit-scrollbar{ width:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  /* ---------- PUBLISH ---------- */
+  #view-publish.active{ display:block; padding:28px; }
+  #view-videos.active{ display:block; padding:28px; }
+  .publish-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px; max-width:1100px; margin-bottom:24px; }
+  .publish-section-title{
+    font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:1px;
+    margin:0 0 10px 0; padding-bottom:6px; border-bottom:1px solid var(--line); max-width:1100px;
+  }
+  .hashtag-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .hashtag-chip{ background:rgba(141,198,63,0.12); color:var(--green); border:1px solid rgba(141,198,63,0.3); padding:4px 10px; border-radius:14px; font-size:11.5px; }
+  .checkbox-row{ display:flex; align-items:center; gap:10px; padding:9px 0; font-size:13px; }
+  .checkbox-row input{ width:16px; height:16px; accent-color:var(--green); }
+  .field-row{ display:flex; gap:10px; }
+  .field-row > div{ flex:1; }
+  /* ---------- WELCOME / SPLASH ---------- */
+  #welcomeScreen{
+    position:fixed; inset:0; z-index:9999; background:#000;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    overflow:hidden; transition: opacity 0.85s ease;
+  }
+  #welcomeScreen.hide{ opacity:0; pointer-events:none; }
+  #welcomeCanvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #welcomeText{ position:relative; z-index:2; text-align:center; opacity:0; animation: welcomeTextIn 1.1s cubic-bezier(.16,.6,.2,1) 0.5s both; }
+  @keyframes welcomeTextIn{
+    0%{ opacity:0; filter:blur(10px); transform:translateY(8px) scale(1.03); }
+    100%{ opacity:1; filter:blur(0); transform:translateY(0) scale(1); }
+  }
+  #welcomeName{
+    font-size:13px; font-weight:600; color:rgba(255,255,255,0.75); letter-spacing:4px;
+    text-transform:uppercase; margin-bottom:16px; text-shadow:0 2px 10px rgba(0,0,0,0.4);
+  }
+  #welcomeBrand{
+    font-family:'Poppins', 'Segoe UI', -apple-system, sans-serif;
+    font-size:44px; font-weight:700; color:#ffffff; letter-spacing:0.5px;
+    text-shadow: 0 6px 28px rgba(0,0,0,0.4);
+  }
+  #welcomeHandle{ font-size:13px; color:#ffffff; opacity:0.85; margin-top:12px; letter-spacing:0.5px; min-height:16px; font-weight:500; text-shadow:0 2px 8px rgba(0,0,0,0.4); }
+
+  #appRoot{ opacity:0; transform:translateY(10px); transition:opacity 0.7s ease, transform 0.7s ease; }
+  #appRoot.show{ opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+  <div id="welcomeScreen">
+    <canvas id="welcomeCanvas"></canvas>
+    <div id="welcomeText">
+      <div id="welcomeName">Buket Amaç</div>
+      <div id="welcomeBrand">just.act.now</div>
+      <div id="welcomeHandle">@just.act.now</div>
+    </div>
+  </div>
+
+  <div id="appRoot">
+  <div class="topbar">
+    <h1>just.<span>act</span>.now</h1>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn" data-tab="home">Ana Sayfa</button>
+      <button class="tab-btn" data-tab="editor">Editör</button>
+      <button class="tab-btn" data-tab="videos">Videolar</button>
+      <button class="tab-btn" data-tab="publish">Yayınla</button>
+      <button class="tab-btn" data-tab="analytics">Analiz</button>
+    </nav>
+  </div>
+
+  <div class="view" id="view-home">
+    <div class="dashboard-wrap">
+      <h1 style="font-size:20px; margin-bottom:4px;">Ana Sayfa</h1>
+      <p class="sub">İçerik hattının anlık özeti.</p>
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-editor">
+    <div class="stage-col">
+      <div>
+        <h1 style="font-size:20px;">Editör</h1>
+        <p class="sub">Önizleme (9:16)</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="stage" width="540" height="960"></canvas>
+      </div>
+      <div class="transport">
+        <button class="btn-secondary" id="btnReplay">↻ Yeniden Oynat</button>
+        <button class="btn-primary" id="btnDownload">⬇ Son Kaliteyi İndir</button>
+      </div>
+      <p class="status" id="status"></p>
+    </div>
+
+    <div class="panel-col">
+
+      <div class="card wide" data-card-id="presets">
+        <h2><span class="drag-handle">⠿</span>Ön Ayarlar <span class="tag">tüm ayarları kaydet/uygula</span></h2>
+        <div class="field-row">
+          <div>
+            <input type="text" id="presetNameInput" placeholder="Ön ayar adı (örn: Gece Modu)">
+          </div>
+          <div style="max-width:140px;">
+            <button class="btn-primary" id="btnSavePreset" style="width:100%;">+ Kaydet</button>
+          </div>
+        </div>
+        <div class="quote-list" id="presetList" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card" data-card-id="template">
+        <h2><span class="drag-handle">⠿</span>Şablon <span class="tag">görsel stil</span></h2>
+        <label class="field">Video Metni</label>
+        <textarea id="templateTextInput" placeholder="Videoda görünecek sözü buraya yaz..." style="min-height:70px;"></textarea>
+        <button class="btn-primary" id="btnReflectText" style="margin-top:8px; width:100%;">↻ Yazıyı Yansıt</button>
+        <button class="btn-secondary" id="btnRandomize" style="margin-top:8px; width:100%;">🎲 Rastgele Öner</button>
+        <label class="field">Font</label>
+        <select id="fontFamilySelect">
+          <option value="'Segoe UI', sans-serif">Segoe UI (varsayılan)</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Impact, sans-serif">Impact</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'Poppins', sans-serif">Poppins</option>
+          <option value="'Montserrat', sans-serif">Montserrat</option>
+          <option value="'Bebas Neue', sans-serif">Bebas Neue</option>
+          <option value="'Oswald', sans-serif">Oswald</option>
+        </select>
+        <div class="toggle-row-h" style="margin-top:12px;">
+          <div class="toggle-chip">
+            <span>Otomatik yazı boyutu</span>
+            <div class="switch on" id="toggleAutoSize"><div class="dot"></div></div>
+          </div>
+        </div>
+        <label class="field">Yazı Boyutu <span id="fontSizeLabel" style="color:var(--white);"></span></label>
+        <input type="range" id="fontSizeSlider" min="20" max="100" step="2" style="accent-color:var(--green);">
+        <label class="field">Şablon Seç</label>
+        <select id="templateSelect">
+          <option value="ana">Ana Şablon</option>
+          <option value="yogun">Yoğun Vurgu</option>
+        </select>
+        <label class="field">Yeşile boyanacak kelime(ler) <span style="color:var(--dim); font-weight:400;">(virgülle birden fazla)</span></label>
+        <input type="text" id="highlightWord" placeholder="örn: hemen, şimdi, disiplin">
+        <label class="field">Arka Plan Stili</label>
+        <select id="backgroundStyleSelect">
+          <option value="solid">Düz Siyah (varsayılan)</option>
+          <option value="vignette">Yumuşak Gradyan</option>
+          <option value="grain">İnce Doku (film grenli)</option>
+        </select>
+        <div class="toggle-row-h" style="margin-top:12px;">
+          <div class="toggle-chip">
+            <span>Logo ile bitiş</span>
+            <div class="switch" id="toggleEndingLogo"><div class="dot"></div></div>
+          </div>
+          <div class="toggle-chip">
+            <span>Satır çizgilerini birleştir</span>
+            <div class="switch" id="toggleMergeLines"><div class="dot"></div></div>
+          </div>
+        </div>
+        <label class="field">Video Süresi <span id="videoDurationLabel" style="color:var(--white);"></span> <span style="color:var(--dim); font-weight:400;">(son 1.4sn kapanış)</span></label>
+        <input type="range" id="videoDurationSlider" min="4" max="20" step="0.5" style="accent-color:var(--green);">
+        <label class="field">Metin Animasyon Tipi</label>
+        <select id="textAnimTypeSelect">
+          <option value="slide">Kayarak (varsayılan)</option>
+          <option value="fade">Belirerek</option>
+          <option value="drop">Yukarıdan Düşerek</option>
+          <option value="pop">Büyüyerek</option>
+        </select>
+        <label class="field">Animasyon Hızı <span id="animSpeedLabel" style="color:var(--white);"></span></label>
+        <input type="range" id="animSpeedSlider" min="30" max="300" step="5" style="accent-color:var(--green);">
+      </div>
+
+      <div class="card wide" data-card-id="animal">
+        <h2><span class="drag-handle">⠿</span>Disiplin Hayvanı <span class="tag">ekranda dolaşıp yanıp söner</span></h2>
+        <div class="animal-grid" id="animalGrid"></div>
+        <label class="field">Konum Modu</label>
+        <select id="animalModeSelect">
+          <option value="fixed">Sabit</option>
+          <option value="teleport">Işınlanma (üst/alt karışık)</option>
+          <option value="top">Üst Mod (sadece üstte ışınlanır)</option>
+          <option value="bottom">Aşağı Mod (sadece altta ışınlanır)</option>
+        </select>
+        <label class="field">Yatay Konum <span id="animalPosXLabel" style="color:var(--white);"></span> <span style="color:var(--dim); font-weight:400;">(Sabit modda tam yerini belirler)</span></label>
+        <input type="range" id="animalPosXSlider" min="5" max="95" step="1" style="accent-color:var(--green);">
+        <label class="field">Dikey Konum <span id="animalPosYLabel" style="color:var(--white);"></span></label>
+        <input type="range" id="animalPosYSlider" min="5" max="90" step="1" style="accent-color:var(--green);">
+        <label class="field">Ek Efektler <span style="color:var(--dim); font-weight:400;">(her birinin kendi hız/yoğunluğu var)</span></label>
+        <div id="effectsList"></div>
+        <label class="field">Hayvan Boyutu <span id="animalSizeLabel" style="color:var(--white);"></span></label>
+        <input type="range" id="animalSizeSlider" min="30" max="170" step="2" style="accent-color:var(--green);">
+      </div>
+
+      <div class="card collapsed" data-card-id="animalsounds">
+        <h2><span class="drag-handle">⠿</span>Hayvan Sesleri <span class="tag">videoya istediğin yere birden çok kez koy</span></h2>
+        <label class="field">Ses dosyası ekle (mp3, wav, m4a, mp4...)</label>
+        <input type="file" id="animalSoundFileInput" accept="audio/*,video/*,.mp3,.mp4,.m4a,.wav,.mov,.aac,.ogg,.webm,.3gp">
+        <p class="note" id="animalSoundConvertNote" style="display:none;"></p>
+        <div class="song-list" id="animalSoundList"></div>
+
+        <label class="field">Videoya Yerleştir</label>
+        <div class="field-row">
+          <div>
+            <select id="animalSoundPlaceSelect"></select>
+          </div>
+          <div style="max-width:110px;">
+            <input type="text" id="animalSoundPlaceTime" placeholder="sn (örn 2.5)">
+          </div>
+        </div>
+        <button class="btn-primary" id="btnPlaceAnimalSound" style="margin-top:8px; width:100%;">+ Bu Saniyeye Ekle</button>
+        <label class="field">Yerleştirilenler <span id="animalSoundRangeLabel" style="color:var(--dim); font-weight:400;">(video süresi içinde)</span></label>
+        <div class="quote-list" id="animalSoundMarkerList"></div>
+      </div>
+
+      <div class="card collapsed" data-card-id="sounds">
+        <h2><span class="drag-handle">⠿</span>Sesler <span class="tag">varsayılan + düzenlenebilir</span></h2>
+        <div class="toggle-row-h">
+          <div class="toggle-chip">
+            <span>Yazma sesi</span>
+            <div class="switch on" id="toggleType"><div class="dot"></div></div>
+          </div>
+          <div class="toggle-chip">
+            <span>Bitiş sesi</span>
+            <div class="switch on" id="toggleChime"><div class="dot"></div></div>
+          </div>
+        </div>
+        <label class="field">Yazma Sesi — Perde</label>
+        <input type="range" id="typePitchSlider" min="400" max="1800" step="10" style="accent-color:var(--green);">
+        <label class="field">Yazma Sesi — Ses Düzeyi</label>
+        <input type="range" id="typeVolumeSlider" min="1" max="15" step="1" style="accent-color:var(--green);">
+        <label class="field">Bitiş Sesi — Perde Çarpanı</label>
+        <input type="range" id="chimePitchSlider" min="50" max="200" step="5" style="accent-color:var(--green);">
+        <label class="field">Bitiş Sesi — Ses Düzeyi</label>
+        <input type="range" id="chimeVolumeSlider" min="2" max="20" step="1" style="accent-color:var(--green);">
+
+        <label class="field">Kendi Sesini Ekle <span style="color:var(--dim);">(yazma veya bitiş sesinin yerine kullanılabilir)</span></label>
+        <input type="file" id="effectFileInput" accept="audio/*,video/*,.mp3,.mp4,.m4a,.wav,.mov,.aac,.ogg,.webm,.3gp">
+        <p class="note" id="effectConvertNote" style="display:none;"></p>
+        <p class="song-meta" id="soundAssignStatus" style="margin-top:8px;"></p>
+        <div class="song-list" id="effectList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="view" id="view-videos">
+    <h1 style="font-size:20px; margin-bottom:4px;">Videolar</h1>
+    <p class="sub">Söz ekle, açıklama otomatik hazırlansın, yayın listesini buradan yönet.</p>
+    <div class="publish-grid">
+
+      <div class="card">
+        <h2>Söz Ekle <span class="tag">açıklama otomatik hazırlanır</span></h2>
+        <textarea id="newQuote" placeholder="Yeni sözü buraya yaz..."></textarea>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn-primary" id="btnAddQuote" style="flex:1;">+ Sözü Kaydet</button>
+          <button class="btn-danger" id="btnClearAll">Tümünü Sıfırla</button>
+        </div>
+        <p class="note">Eklediğin her söz için 5 etiketli, hikaye tonunda bir açıklama otomatik hazırlanır — hazır olunca aşağıdaki listede görünür.</p>
+      </div>
+
+      <div class="card">
+        <h2>Özet</h2>
+        <div class="stat-section-title">Sözler</div>
+        <div class="stat-row">
+          <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Toplam</div></div>
+          <div class="stat-box used"><div class="num" id="statUsed">0</div><div class="lbl">Kullanılan</div></div>
+          <div class="stat-box"><div class="num" id="statUnused">0</div><div class="lbl">Kullanılmayan</div></div>
+        </div>
+      </div>
+
+      <div class="card wide">
+        <h2>Yayın Listesi <span class="tag">taslak → oluşturuldu → paylaşıldı</span></h2>
+        <div class="quote-list" id="quoteList" style="max-height:520px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="view" id="view-publish">
+    <h1 style="font-size:20px; margin-bottom:4px;">Yayınla</h1>
+    <p class="sub">Açıklama üret, hesap bilgilerini kaydet — paylaşımı kendin yapıyorsun.</p>
+
+    <div class="publish-section-title">Hesap</div>
+    <div class="publish-grid">
+      <div class="card wide">
+        <h2>Hesap Bilgileri <span class="tag">kalıcı olarak saklanır</span></h2>
+        <div class="field-row">
+          <div>
+            <label class="field">TikTok kullanıcı adı</label>
+            <input type="text" id="tiktokHandle" placeholder="@just.act.now" value="just.act.now">
+          </div>
+          <div>
+            <label class="field">Instagram kullanıcı adı</label>
+            <input type="text" id="instagramHandle" placeholder="@just.act.now" value="just.act.now">
+          </div>
+        </div>
+        <button class="btn-secondary" id="btnSaveAccounts" style="margin-top:12px;">Hesap Bilgilerini Kaydet</button>
+      </div>
+    </div>
+
+    <div class="publish-section-title">İçerik</div>
+    <div class="publish-grid">
+      <div class="card wide">
+        <h2>Açıklama <span class="tag">seçtiğin hayvana özel</span></h2>
+        <label class="field">Açıklama İçin Hayvan</label>
+        <select id="captionAnimalSelect"></select>
+        <p class="song-meta" id="captionAnimalContext" style="margin-bottom:10px; margin-top:8px;"></p>
+        <textarea id="captionText" placeholder="Açıklamayı buraya yaz ya da yapay zekaya oluşturt..." style="min-height:110px;"></textarea>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button class="btn-primary" id="btnGenCaption" style="flex:1;">✦ Yapay Zeka ile Açıklama Oluştur</button>
+          <button class="btn-secondary" id="btnCopyCaption">📋 Kopyala</button>
+        </div>
+        <div class="hashtag-chips" id="hashtagChips"></div>
+        <p class="status" id="publishStatus" style="text-align:left; max-width:none; margin-top:10px;"></p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="view" id="view-analytics">
+    <h1 style="font-size:20px; margin-bottom:4px;">Analiz</h1>
+    <p class="sub">Takipçi sayını buradan gir — büyüme özeti Ana Sayfa'da görünür.</p>
+    <div class="publish-grid">
+
+      <div class="card">
+        <h2>Takipçi Sayısı Ekle <span class="tag">elle giriş</span></h2>
+        <div class="field-row">
+          <div><label class="field">Tarih &amp; Saat</label><input type="datetime-local" id="followerDate"></div>
+          <div><label class="field">Takipçi Sayısı</label><input type="text" id="followerCount" placeholder="0"></div>
+        </div>
+        <button class="btn-primary" id="btnAddFollower" style="margin-top:10px; width:100%;">Kaydet</button>
+        <p class="note">TikTok/Instagram'ın kendi profil ekranından baktığın gerçek sayıyı gir — otomatik çekilmiyor.</p>
+      </div>
+
+      <div class="card">
+        <h2>Geçmiş <span class="tag">girdiğin kayıtlar</span></h2>
+        <div id="followerHistory"></div>
+      </div>
+
+    </div>
+  </div>
+
+  </div>
+
+<script>
+/* ============================================================
+   HOŞGELDİN EKRANI — siyahı yeşil dalgayla dolduran açılış
+   ============================================================ */
+function runWelcomeAnimation(){
+  const wCanvas = document.getElementById('welcomeCanvas');
+  const wctx = wCanvas.getContext('2d');
+  function resize(){ wCanvas.width = window.innerWidth; wCanvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const startTime = performance.now();
+  const fillDuration = 1600;
+  const holdDuration = 700;
+  const totalBeforeFade = fillDuration + holdDuration;
+
+  function drawWave(now){
+    const t = now - startTime;
+    const w = wCanvas.width, h = wCanvas.height;
+    wctx.fillStyle = '#000000';
+    wctx.fillRect(0,0,w,h);
+
+    const p = Math.min(1, t/fillDuration);
+    const eased = 1 - Math.pow(1-p, 3);
+    const baseY = h * (1 - eased);
+    const amp = 1 - eased; // dalga tam dolarken düzleşir, bittiğinde tamamen düz yeşil kalır
+
+    wctx.beginPath();
+    wctx.moveTo(0, h);
+    for(let x=0; x<=w; x+=12){
+      const y = baseY + Math.sin((x*0.014) + now*0.0022) * 16 * amp;
+      wctx.lineTo(x, y);
+    }
+    wctx.lineTo(w, h); wctx.closePath();
+    wctx.fillStyle = 'rgba(95,140,40,0.85)';
+    wctx.fill();
+
+    wctx.beginPath();
+    wctx.moveTo(0, h);
+    for(let x=0; x<=w; x+=12){
+      const y = baseY + 10*amp + Math.sin((x*0.02) + now*0.0032 + 1.4) * 11 * amp;
+      wctx.lineTo(x, y);
+    }
+    wctx.lineTo(w, h); wctx.closePath();
+    wctx.fillStyle = 'rgba(141,198,63,0.95)';
+    wctx.fill();
+
+    if(t < totalBeforeFade){
+      requestAnimationFrame(drawWave);
+    }
+  }
+  requestAnimationFrame(drawWave);
+
+  setTimeout(()=>{
+    document.getElementById('welcomeScreen').classList.add('hide');
+    document.getElementById('appRoot').classList.add('show');
+  }, totalBeforeFade);
+
+  setTimeout(()=>{
+    document.getElementById('welcomeScreen').style.display = 'none';
+    window.removeEventListener('resize', resize);
+  }, totalBeforeFade + 900);
+}
+runWelcomeAnimation();
+
+/* ============================================================
+   EDİTÖR PANELİ — kartlar tıklanınca aç/kapa (kullanımı sadeleştirir)
+   ============================================================ */
+document.querySelectorAll('#view-editor .card h2').forEach(h2=>{
+  h2.addEventListener('click', (e)=>{
+    if(e.target.closest('.drag-handle')) return;
+    h2.closest('.card').classList.toggle('collapsed');
+  });
+});
+
+/* ============================================================
+   EDİTÖR PANELİ — kartları sürükleyip yer değiştirme (yukarı/aşağı/sol/sağ)
+   ============================================================ */
+function initCardDragReorder(){
+  const container = document.querySelector('#view-editor .panel-col');
+  if(!container) return;
+  let dragging = null;
+
+  function getDragAfterElement(x, y){
+    const cards = [...container.querySelectorAll('.card:not(.dragging)')];
+    let best = { dist: Infinity, insertBeforeEl: null };
+    cards.forEach(card=>{
+      const box = card.getBoundingClientRect();
+      const cx = box.left + box.width/2, cy = box.top + box.height/2;
+      const dist = Math.hypot(x-cx, y-cy);
+      if(dist < best.dist){
+        const insertAfter = (y > cy) || (Math.abs(y-cy) < box.height*0.25 && x > cx);
+        best = { dist, insertBeforeEl: insertAfter ? card.nextElementSibling : card };
+      }
+    });
+    return best.insertBeforeEl;
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    const target = getDragAfterElement(point.clientX, point.clientY);
+    if(target == null) container.appendChild(dragging);
+    else if(target !== dragging) container.insertBefore(dragging, target);
+  }
+  function onUp(){
+    if(dragging) dragging.classList.remove('dragging');
+    dragging = null;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    saveCardOrder();
+  }
+  function onDown(e){
+    const card = e.target.closest('.card');
+    if(!card) return;
+    dragging = card;
+    card.classList.add('dragging');
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    e.preventDefault();
+  }
+
+  container.querySelectorAll('.drag-handle').forEach(handle=>{
+    handle.addEventListener('pointerdown', onDown);
+  });
+}
+async function saveCardOrder(){
+  const container = document.querySelector('#view-editor .panel-col');
+  if(!container) return;
+  state.cardOrder = [...container.querySelectorAll('.card')].map(c=>c.dataset.cardId).filter(Boolean);
+  await persistSettings();
+}
+function applyCardOrder(){
+  const container = document.querySelector('#view-editor .panel-col');
+  if(!container || !state.cardOrder || !state.cardOrder.length) return;
+  state.cardOrder.forEach(id=>{
+    const el = container.querySelector(`.card[data-card-id="${id}"]`);
+    if(el) container.appendChild(el);
+  });
+}
+
+/* ============================================================
+   TAB NAVIGATION
+   ============================================================ */
+const views = ['home','editor','videos','publish','analytics'];
+let appReady = false;
+function setTab(name){
+  views.forEach(v=>{
+    document.getElementById('view-'+v).classList.toggle('active', v===name);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===name);
+  });
+  try{
+    if(name === 'home' && appReady && typeof renderDashboard === 'function') renderDashboard();
+    if(name === 'analytics' && appReady && typeof renderFollowerHistory === 'function') renderFollowerHistory();
+    if(name === 'publish' && typeof updateCaptionAnimalContext === 'function') updateCaptionAnimalContext();
+  }catch(err){
+    console.error('Sekme yenileme hatası:', err);
+  }
+}
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab-btn'); if(!btn) return;
+  setTab(btn.dataset.tab);
+});
+setTab('home');
+
+/* ============================================================
+   VERİTABANI (persistent artifact storage)
+   ============================================================ */
+const DB = {
+  async loadQuotes(){ try{ const r = await window.storage.get('quotes', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveQuotes(list){ try{ await window.storage.set('quotes', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async loadSettings(){ try{ const r = await window.storage.get('settings', false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; } },
+  async saveSettings(s){ try{ await window.storage.set('settings', JSON.stringify(s), false); }catch(e){ console.error(e); } },
+  async loadPublish(){ try{ const r = await window.storage.get('publish_data', false); return r ? JSON.parse(r.value) : null; }catch(e){ return null; } },
+  async savePublish(d){ try{ await window.storage.set('publish_data', JSON.stringify(d), false); }catch(e){ console.error(e); } },
+  async loadVideoLog(){ try{ const r = await window.storage.get('video_log', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveVideoLog(list){ try{ await window.storage.set('video_log', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async loadFollowerLog(){ try{ const r = await window.storage.get('follower_log', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveFollowerLog(list){ try{ await window.storage.set('follower_log', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async loadPresets(){ try{ const r = await window.storage.get('presets', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async savePresets(list){ try{ await window.storage.set('presets', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async loadEffectsIndex(){ try{ const r = await window.storage.get('effects_index', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveEffectsIndex(list){ try{ await window.storage.set('effects_index', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async saveEffectData(id, dataUrl){ return await window.storage.set('effect:'+id, dataUrl, false); },
+  async loadEffectData(id){ try{ const r = await window.storage.get('effect:'+id, false); return r ? r.value : null; }catch(e){ return null; } },
+  async deleteEffectData(id){ try{ await window.storage.delete('effect:'+id, false); }catch(e){ } },
+  async loadAnimalSoundsIndex(){ try{ const r = await window.storage.get('animal_sounds_index', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveAnimalSoundsIndex(list){ try{ await window.storage.set('animal_sounds_index', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+  async saveAnimalSoundData(id, dataUrl){ return await window.storage.set('animalsound:'+id, dataUrl, false); },
+  async loadAnimalSoundData(id){ try{ const r = await window.storage.get('animalsound:'+id, false); return r ? r.value : null; }catch(e){ return null; } },
+  async deleteAnimalSoundData(id){ try{ await window.storage.delete('animalsound:'+id, false); }catch(e){ } },
+  async loadAnimalSoundMarkers(){ try{ const r = await window.storage.get('animal_sound_markers', false); return r ? JSON.parse(r.value) : []; }catch(e){ return []; } },
+  async saveAnimalSoundMarkers(list){ try{ await window.storage.set('animal_sound_markers', JSON.stringify(list), false); }catch(e){ console.error(e); } },
+};
+
+/* ============================================================
+   HAYVAN SEÇENEKLERİ
+   ============================================================ */
+const ANIMALS = [
+  { id:'owl',      emoji:'🦉', name:'Baykuş',     blurb:'Karanlıkta bile net görür, dikkati hiç dağılmaz.' },
+  { id:'ant',      emoji:'🐜', name:'Karınca',    blurb:'Küçük adımlarla, hiç durmadan hedefine taşır.' },
+  { id:'wolf',     emoji:'🐺', name:'Kurt',       blurb:'Sürüsüne sadık, hedefine sessizce kilitlenir.' },
+  { id:'turtle',   emoji:'🐢', name:'Kaplumbağa', blurb:'Yavaş ama asla vazgeçmeyen bir azimle ilerler.' },
+  { id:'bee',      emoji:'🐝', name:'Arı',        blurb:'Her gün aynı düzende, şikayet etmeden çalışır.' },
+  { id:'lion',     emoji:'🦁', name:'Aslan',      blurb:'Beklemeyi bilir, doğru anda harekete geçer.' },
+  { id:'eagle',    emoji:'🦅', name:'Kartal',     blurb:'Gözünü hedeften bir an olsun ayırmaz.' },
+  { id:'fox',      emoji:'🦊', name:'Tilki',      blurb:'Akıllıca planlar, sabırla doğru fırsatı bekler.' },
+  { id:'elephant', emoji:'🐘', name:'Fil',        blurb:'Asla unutmaz, verdiği karardan geri dönmez.' },
+  { id:'tiger',    emoji:'🐅', name:'Kaplan',     blurb:'Gücünü sessizce biriktirir, doğru anda patlatır.' },
+  { id:'bear',     emoji:'🐻', name:'Ayı',        blurb:'Kış gelmeden hazırlığını tamamlar, hiç ertelemez.' },
+  { id:'deer',     emoji:'🦌', name:'Geyik',      blurb:'Her an tetikte, hiçbir fırsatı kaçırmaz.' },
+  { id:'beaver',   emoji:'🦫', name:'Kunduz',     blurb:'Taş taş üstüne koyar, sonunda büyük işi kurar.' },
+  { id:'spider',   emoji:'🕷️', name:'Örümcek',    blurb:'Ağını sabırla örer, bir kez kurar hep kazanır.' },
+  { id:'cheetah',  emoji:'🐆', name:'Çita',       blurb:'Beklerken sakin, harekete geçince durdurulamaz.' },
+  { id:'gorilla',  emoji:'🦍', name:'Goril',      blurb:'Düzenini korur, alanını asla bırakmaz.' },
+  { id:'dolphin',  emoji:'🐬', name:'Yunus',      blurb:'Takımıyla uyum içinde, akıllıca ilerler.' },
+  { id:'horse',    emoji:'🐎', name:'At',         blurb:'Yorulsa da koşmaya devam eder, asla durmaz.' },
+  { id:'scorpion', emoji:'🦂', name:'Akrep',      blurb:'Sabırla bekler, doğru anda tek hamlede vurur.' },
+  { id:'crocodile',emoji:'🐊', name:'Timsah',     blurb:'Saatlerce hareketsiz bekler, fırsatı asla kaçırmaz.' },
+  { id:'hedgehog', emoji:'🦔', name:'Kirpi',      blurb:'Küçük ama kararlı, kendini hiç bırakmaz.' },
+  { id:'penguin',  emoji:'🐧', name:'Penguen',    blurb:'En soğukta bile düzenini bozmaz.' },
+  { id:'badger',   emoji:'🦡', name:'Porsuk',     blurb:'İnatçı ve yılmaz, kazanana kadar durmaz.' },
+  { id:'sloth',    emoji:'🦥', name:'Tembel Hayvan', blurb:'Yavaş olsa da yönünü hiç şaşırmaz.' },
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+  quotes: [],
+  activeQuote: 'JUST ACT NOW.', template: 'ana', highlightWord: '',
+  animal: 'owl', captionAnimal: 'owl', soundType: true, soundChime: true, animalPositionMode: 'fixed', animalSize: 72,
+  fontFamily: "'Segoe UI', sans-serif", fontSizeMode: 'auto', fontSizeManual: 48, backgroundStyle: 'solid',
+  animalPosX: 78, animalPosY: 16, mergeLineMarkers: false, videoDurationSec: 8, textAnimType: 'slide', animSpeed: 100,
+  animalEffects: { glow:false, wiggle:false, bounce:false, trail:false, colorPulse:false, shake:false, flip:false, pulseScale:false },
+  hashtags: [],
+  endingLogo: false,
+  clickPitch: 1100, clickVolume: 6,
+  chimePitchMult: 100, chimeVolume: 9,
+  customClickId: null, customChimeId: null, outroWordSoundIds: [null, null, null],
+  effectSounds: [],
+  effectParams: {
+    glow:{speed:100,intensity:100}, wiggle:{speed:100,intensity:100}, bounce:{speed:100,intensity:100},
+    trail:{speed:100,intensity:100}, colorPulse:{speed:100,intensity:100},
+    shake:{speed:100,intensity:100}, flip:{speed:100,intensity:100}, pulseScale:{speed:100,intensity:100},
+  },
+  videoLog: [], followerLog: [], cardOrder: [], presets: [],
+  animalSounds: [], animalSoundMarkers: [],
+};
+
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+/* ============================================================
+   HAYVAN İKONU — emojinin kendi (öz) renkleriyle, ayarlanabilir boyutta üretir
+   ============================================================ */
+const iconCache = {};
+function getAnimalIcon(animal, size){
+  const key = animal.id + '_' + size;
+  if(iconCache[key]) return iconCache[key];
+  const off = document.createElement('canvas');
+  off.width = size; off.height = size;
+  const octx = off.getContext('2d');
+  octx.textAlign = 'center'; octx.textBaseline = 'middle';
+  octx.font = `${Math.round(size*0.82)}px sans-serif`;
+  octx.fillText(animal.emoji, size/2, size/2 + size*0.04);
+  iconCache[key] = off;
+  return off;
+}
+let pulseTempCanvas = document.createElement('canvas');
+let pulseTempCtx = pulseTempCanvas.getContext('2d');
+function getAnimalIconWithPulse(baseIcon, size, now){
+  if(pulseTempCanvas.width !== size){ pulseTempCanvas.width = size; pulseTempCanvas.height = size; }
+  pulseTempCtx.clearRect(0,0,size,size);
+  pulseTempCtx.drawImage(baseIcon, 0, 0);
+  const speed = fxSpeedOf('colorPulse');
+  const intensity = fxIntensityOf('colorPulse');
+  const pulseAlpha = Math.min(1, ((Math.sin(now/300*speed)+1)/2) * 0.55 * intensity);
+  pulseTempCtx.globalCompositeOperation = 'source-atop';
+  pulseTempCtx.globalAlpha = pulseAlpha;
+  pulseTempCtx.fillStyle = '#8dc63f';
+  pulseTempCtx.fillRect(0,0,size,size);
+  pulseTempCtx.globalCompositeOperation = 'source-over';
+  pulseTempCtx.globalAlpha = 1;
+  return pulseTempCanvas;
+}
+
+/* ============================================================
+   AUDIO — varsayılan (sentezlenmiş) sesler, düzenlenebilir + değiştirilebilir
+   ============================================================ */
+let actx = null;
+function getActx(){ if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+
+const decodedBufferCache = {}; // effectSound id -> AudioBuffer
+async function preloadEffectBuffer(id){
+  if(!id || decodedBufferCache[id]) return decodedBufferCache[id];
+  const dataUrl = await DB.loadEffectData(id);
+  if(!dataUrl) return null;
+  const resp = await fetch(dataUrl);
+  const arr = await resp.arrayBuffer();
+  const ac = getActx();
+  const buf = await ac.decodeAudioData(arr);
+  decodedBufferCache[id] = buf;
+  return buf;
+}
+async function preloadAnimalSoundBuffer(id){
+  if(!id || decodedBufferCache[id]) return decodedBufferCache[id];
+  const dataUrl = await DB.loadAnimalSoundData(id);
+  if(!dataUrl) return null;
+  const resp = await fetch(dataUrl);
+  const arr = await resp.arrayBuffer();
+  const ac = getActx();
+  const buf = await ac.decodeAudioData(arr);
+  decodedBufferCache[id] = buf;
+  return buf;
+}
+function playBuffer(buffer, destNode, volume){
+  const ac = getActx();
+  const src = ac.createBufferSource(); src.buffer = buffer;
+  const gain = ac.createGain(); gain.gain.value = volume;
+  src.connect(gain); gain.connect(destNode || ac.destination);
+  src.start();
+}
+
+function playClick(destNode){
+  if(!state.soundType) return;
+  if(state.customClickId && decodedBufferCache[state.customClickId]){
+    playBuffer(decodedBufferCache[state.customClickId], destNode, state.clickVolume/100);
+    return;
+  }
+  const ac = getActx();
+  const osc = ac.createOscillator(); const gain = ac.createGain();
+  const vol = (state.clickVolume||6)/100;
+  const pitch = state.clickPitch||1100;
+  osc.type = 'square'; osc.frequency.value = pitch + Math.random()*(pitch*0.35);
+  gain.gain.setValueAtTime(vol, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.05);
+  osc.connect(gain); gain.connect(destNode || ac.destination);
+  osc.start(); osc.stop(ac.currentTime + 0.05);
+}
+function playChime(destNode){
+  if(!state.soundChime) return;
+  if(state.customChimeId && decodedBufferCache[state.customChimeId]){
+    playBuffer(decodedBufferCache[state.customChimeId], destNode, state.chimeVolume/100);
+    return;
+  }
+  const ac = getActx();
+  const mult = (state.chimePitchMult||100)/100;
+  const vol = (state.chimeVolume||9)/100;
+  [660, 880, 1320].forEach((freq, i)=>{
+    const osc = ac.createOscillator(); const gain = ac.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq * mult;
+    const t0 = ac.currentTime + i*0.06;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol, t0+0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+0.6);
+    osc.connect(gain); gain.connect(destNode || ac.destination);
+    osc.start(t0); osc.stop(t0+0.6);
+  });
+}
+
+/* ---- "Logo ile bitiş" için sert vuruş sesi (thump + noise snap) ---- */
+let noiseBufferCache = null;
+function getNoiseBuffer(){
+  if(noiseBufferCache) return noiseBufferCache;
+  const ac = getActx();
+  const size = Math.floor(ac.sampleRate * 0.45);
+  const buffer = ac.createBuffer(1, size, ac.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<size;i++){ data[i] = (Math.random()*2-1) * Math.pow(1-i/size, 1.4); }
+  noiseBufferCache = buffer;
+  return buffer;
+}
+let distortionCurveCache = null;
+function getDistortionCurve(){
+  if(distortionCurveCache) return distortionCurveCache;
+  const amount = 65;
+  const n = 44100;
+  const curve = new Float32Array(n);
+  for(let i=0;i<n;i++){
+    const x = i*2/n - 1;
+    curve[i] = (3+amount)*x*20*(Math.PI/180) / (Math.PI + amount*Math.abs(x));
+  }
+  distortionCurveCache = curve;
+  return curve;
+}
+function playHit(destNode){
+  const ac = getActx();
+  const t0 = ac.currentTime;
+
+  // çöküş hissi veren, distorsiyonlu, uzun ve alçalan sub-bas — davul değil, yıkım
+  const sub = ac.createOscillator(); const subGain = ac.createGain();
+  sub.type = 'sawtooth';
+  sub.frequency.setValueAtTime(150, t0);
+  sub.frequency.exponentialRampToValueAtTime(26, t0+0.5);
+  subGain.gain.setValueAtTime(0.001, t0);
+  subGain.gain.exponentialRampToValueAtTime(0.55, t0+0.025);
+  subGain.gain.exponentialRampToValueAtTime(0.0001, t0+0.55);
+  const shaper = ac.createWaveShaper();
+  shaper.curve = getDistortionCurve();
+  shaper.oversample = '4x';
+  sub.connect(shaper); shaper.connect(subGain); subGain.connect(destNode||ac.destination);
+  sub.start(t0); sub.stop(t0+0.56);
+
+  // filtreli, alçalan gürültü çöküşü — enkaz/kırılma hissi (temiz gürültü patlaması değil)
+  const noiseSrc = ac.createBufferSource(); noiseSrc.buffer = getNoiseBuffer();
+  const noiseFilter = ac.createBiquadFilter();
+  noiseFilter.type = 'lowpass';
+  noiseFilter.frequency.setValueAtTime(7000, t0);
+  noiseFilter.frequency.exponentialRampToValueAtTime(150, t0+0.4);
+  const noiseGain = ac.createGain();
+  noiseGain.gain.setValueAtTime(0.5, t0);
+  noiseGain.gain.exponentialRampToValueAtTime(0.0001, t0+0.42);
+  noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(destNode||ac.destination);
+  noiseSrc.start(t0);
+
+  // dissonant, tiz dijital çatlama — vuruş yerine "bozulma/kırılma" hissi
+  const crackOsc = ac.createOscillator(); const crackGain = ac.createGain();
+  crackOsc.type = 'square';
+  crackOsc.frequency.setValueAtTime(1500, t0);
+  crackOsc.frequency.exponentialRampToValueAtTime(70, t0+0.14);
+  crackGain.gain.setValueAtTime(0.001, t0);
+  crackGain.gain.exponentialRampToValueAtTime(0.3, t0+0.006);
+  crackGain.gain.exponentialRampToValueAtTime(0.0001, t0+0.17);
+  crackOsc.connect(crackGain); crackGain.connect(destNode||ac.destination);
+  crackOsc.start(t0); crackOsc.stop(t0+0.18);
+}
+
+
+/* ============================================================
+   ŞARKI YÖNETİMİ (mp4 -> wav dönüşümü + kalıcı saklama)
+   ============================================================ */
+function downmixAndResample(buffer, targetSampleRate){
+  const numChannels = buffer.numberOfChannels;
+  const sourceSampleRate = buffer.sampleRate;
+  const length = buffer.length;
+  const mono = new Float32Array(length);
+  for(let ch=0; ch<numChannels; ch++){
+    const data = buffer.getChannelData(ch);
+    for(let i=0;i<length;i++){ mono[i] += data[i] / numChannels; }
+  }
+  if(!targetSampleRate || targetSampleRate >= sourceSampleRate){
+    return { samples: mono, sampleRate: sourceSampleRate };
+  }
+  const ratio = sourceSampleRate / targetSampleRate;
+  const newLength = Math.max(1, Math.round(length / ratio));
+  const result = new Float32Array(newLength);
+  for(let i=0;i<newLength;i++){
+    const srcIndex = i*ratio;
+    const idx0 = Math.floor(srcIndex);
+    const idx1 = Math.min(idx0+1, length-1);
+    const frac = srcIndex-idx0;
+    result[i] = mono[idx0]*(1-frac) + mono[idx1]*frac;
+  }
+  return { samples: result, sampleRate: targetSampleRate };
+}
+function encodeWavBlob(samples, sampleRate){
+  const bytesPerSample = 2;
+  const blockAlign = bytesPerSample; // mono
+  const byteRate = sampleRate*blockAlign;
+  const dataSize = samples.length*bytesPerSample;
+  const buf = new ArrayBuffer(44+dataSize);
+  const view = new DataView(buf);
+  function writeStr(offset, str){ for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
+  writeStr(0,'RIFF'); view.setUint32(4, 36+dataSize, true); writeStr(8,'WAVE');
+  writeStr(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true);
+  view.setUint16(22,1,true); view.setUint32(24,sampleRate,true);
+  view.setUint32(28,byteRate,true); view.setUint16(32,blockAlign,true); view.setUint16(34,16,true);
+  writeStr(36,'data'); view.setUint32(40,dataSize,true);
+  let offset=44;
+  for(let i=0;i<samples.length;i++,offset+=2){
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s<0 ? s*0x8000 : s*0x7FFF, true);
+  }
+  return new Blob([view], {type:'audio/wav'});
+}
+function audioBufferToWavBlob(buffer, targetSampleRate){
+  const { samples, sampleRate } = downmixAndResample(buffer, targetSampleRate);
+  return encodeWavBlob(samples, sampleRate);
+}
+function sampleRateForDuration(durationSec){
+  if(durationSec > 180) return 16000;
+  if(durationSec > 60) return 22050;
+  return 32000;
+}
+const AUDIO_ENCODER_VERSION = 2; // 2 = bağımsız WAV kodlayıcı (eski mp3/lamejs kayıtlarını tespit etmek için)
+function blobToDataUrl(blob){
+  return new Promise((res, rej)=>{ const fr = new FileReader(); fr.onload = ()=>res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+function getAudioDuration(dataUrl){
+  return new Promise((res)=>{
+    const a = new Audio(); a.src = dataUrl;
+    a.addEventListener('loadedmetadata', ()=>res(a.duration || 0));
+    a.addEventListener('error', ()=>res(0));
+    setTimeout(()=>res(0), 4000);
+  });
+}
+function validateAudioPlayable(dataUrl){
+  return new Promise((resolve)=>{
+    const a = new Audio();
+    let settled = false;
+    const finish = (ok)=>{ if(settled) return; settled = true; resolve(ok); };
+    a.addEventListener('canplay', ()=>finish(true));
+    a.addEventListener('loadedmetadata', ()=>finish(true));
+    a.addEventListener('error', ()=>finish(false));
+    a.src = dataUrl;
+    setTimeout(()=>finish(false), 3500);
+  });
+}
+function fmtDuration(sec){ if(!sec) return '--:--'; const m = Math.floor(sec/60), s = Math.round(sec%60); return `${m}:${String(s).padStart(2,'0')}`; }
+function dataUrlToBlobUrl(dataUrl){
+  const commaIdx = dataUrl.indexOf(',');
+  const header = dataUrl.slice(0, commaIdx);
+  const base64 = dataUrl.slice(commaIdx+1);
+  const mimeMatch = header.match(/data:([^;]+)/);
+  const mime = mimeMatch ? mimeMatch[1] : 'audio/wav';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++){ bytes[i] = binary.charCodeAt(i); }
+  const blob = new Blob([bytes], { type: mime });
+  return URL.createObjectURL(blob);
+}
+function validateWavHeader(dataUrl){
+  try{
+    const commaIdx = dataUrl.indexOf(',');
+    if(commaIdx < 0) return { hata: 'data: URL formatı değil' };
+    const meta = dataUrl.slice(5, commaIdx);
+    const base64Sample = dataUrl.slice(commaIdx+1, commaIdx+1+80);
+    const binary = atob(base64Sample);
+    const riff = binary.slice(0,4);
+    const wave = binary.slice(8,12);
+    return { meta, riffOk: riff==='RIFF', waveOk: wave==='WAVE', toplamUzunluk: dataUrl.length };
+  }catch(e){
+    return { hata: 'başlık çözülemedi: ' + e.message };
+  }
+}
+function describeAudioError(audioEl, dataUrl){
+  const err = audioEl && audioEl.error;
+  const code = err ? err.code : null;
+  const codeNames = { 1:'ABORTED (yükleme durduruldu)', 2:'NETWORK (ağ hatası)', 3:'DECODE (ses verisi bozuk/çözülemedi)', 4:'SRC_NOT_SUPPORTED (format tanınmadı)' };
+  const codeLabel = code ? (codeNames[code] || ('bilinmeyen kod '+code)) : 'kod alınamadı';
+  const header = dataUrl ? validateWavHeader(dataUrl) : { hata: 'veri yok' };
+  return `MediaError: ${codeLabel} · başlık: ${JSON.stringify(header)}`;
+}
+
+/* ============================================================
+   SES EFEKTLERİ — yazma/bitiş seslerinin yerine geçebilen kendi klipleri
+   ============================================================ */
+async function handleEffectFile(file){
+  const noteEl = document.getElementById('effectConvertNote');
+  noteEl.style.display = 'block';
+  noteEl.textContent = 'Ses işleniyor...';
+  let dataUrl;
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const ac = getActx();
+    const audioBuffer = await ac.decodeAudioData(arrayBuffer.slice(0));
+    const durationSec = audioBuffer.duration || 10;
+    const targetSR = sampleRateForDuration(durationSec);
+    const wavBlob = audioBufferToWavBlob(audioBuffer, targetSR);
+    dataUrl = await blobToDataUrl(wavBlob);
+  }catch(e){ console.error(e); noteEl.textContent = 'Dönüştürme başarısız oldu: ' + e.message; return; }
+  if(dataUrl.length > 4_800_000){ noteEl.textContent = 'Bu dosya çok büyük, lütfen daha kısa/küçük bir dosya dene.'; return; }
+  const duration = await getAudioDuration(dataUrl);
+  const defaultName = file.name.replace(/\.[^.]+$/, '');
+  const id = 'fx_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const saveResult = await DB.saveEffectData(id, dataUrl);
+  if(!saveResult){ noteEl.textContent = 'Kaydetme başarısız oldu, tekrar dener misin?'; return; }
+  state.effectSounds.push({ id, name: defaultName, durationSec: Math.round(duration), addedAt: Date.now(), converted: true, encVer: AUDIO_ENCODER_VERSION });
+  await DB.saveEffectsIndex(state.effectSounds);
+  noteEl.textContent = 'Kaydedildi ve listede görünüyor ✓';
+  renderEffectSounds();
+  setTimeout(()=>{ noteEl.style.display = 'none'; }, 3000);
+}
+document.getElementById('effectFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  await handleEffectFile(file); e.target.value = '';
+});
+
+function updateSoundAssignStatus(){
+  const clickName = state.customClickId ? (state.effectSounds.find(s=>s.id===state.customClickId)?.name || 'özel ses') : 'varsayılan (sentezlenmiş)';
+  const chimeName = state.customChimeId ? (state.effectSounds.find(s=>s.id===state.customChimeId)?.name || 'özel ses') : 'varsayılan (sentezlenmiş)';
+  document.getElementById('soundAssignStatus').textContent = `Yazma sesi: ${clickName} · Bitiş sesi: ${chimeName}`;
+}
+
+let effectPreviewEl = null;
+const OUTRO_WORD_LABELS = ['JUST', 'ACT', 'NOW'];
+function renderEffectSounds(){
+  const list = document.getElementById('effectList');
+  list.innerHTML = '';
+  if(state.effectSounds.length === 0){ list.innerHTML = '<div class="empty-note">Henüz özel ses eklenmedi.</div>'; }
+  else{
+    state.effectSounds.slice().reverse().forEach(s=>{
+      const isClick = state.customClickId === s.id;
+      const isChime = state.customChimeId === s.id;
+      const wordSlots = state.outroWordSoundIds.map((id,i)=> id===s.id ? OUTRO_WORD_LABELS[i] : null).filter(Boolean);
+      const div = document.createElement('div');
+      div.className = 'song-item' + (isClick||isChime||wordSlots.length ? ' active' : '');
+      const wordBadges = wordSlots.map(w=>`<span class="badge active-badge">${w} sesi</span>`).join('');
+      const wordButtons = OUTRO_WORD_LABELS.map((label,i)=>{
+        const assigned = state.outroWordSoundIds[i] === s.id;
+        return `<button class="${assigned?'btn-primary':'btn-secondary'} mini-btn" data-act="useword" data-word="${i}" data-id="${s.id}">${label}${assigned?' ✓':''}</button>`;
+      }).join('');
+      div.innerHTML = `
+        <input class="song-name-input" type="text" value="${escapeHtml(s.name)}" data-id="${s.id}">
+        <div class="row">
+          <span class="song-meta">${fmtDuration(s.durationSec)}${s.converted ? ' · mp4→mp3' : ''}</span>
+          ${isClick ? '<span class="badge active-badge">yazma sesi</span>' : ''}
+          ${isChime ? '<span class="badge active-badge">bitiş sesi</span>' : ''}
+          ${wordBadges}
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <div class="actions">
+            <button class="btn-secondary mini-btn" data-act="play" data-id="${s.id}">▶ Dinle</button>
+            <button class="btn-secondary mini-btn" data-act="useclick" data-id="${s.id}">Yazma Sesi Yap</button>
+            <button class="btn-secondary mini-btn" data-act="usechime" data-id="${s.id}">Bitiş Sesi Yap</button>
+            <button class="btn-danger mini-btn" data-act="del" data-id="${s.id}">Sil</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <span class="song-meta" style="margin-right:6px;">Bitiş kelimesi:</span>
+          <div class="actions">${wordButtons}</div>
+        </div>`;
+      list.appendChild(div);
+    });
+  }
+  updateSoundAssignStatus();
+}
+document.getElementById('effectList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id; const s = state.effectSounds.find(x=>x.id===id); if(!s) return;
+  if(btn.dataset.act === 'useclick'){
+    state.customClickId = (state.customClickId === id) ? null : id;
+    if(state.customClickId) await preloadEffectBuffer(state.customClickId);
+    await persistSettings(); renderEffectSounds();
+  } else if(btn.dataset.act === 'usechime'){
+    state.customChimeId = (state.customChimeId === id) ? null : id;
+    if(state.customChimeId) await preloadEffectBuffer(state.customChimeId);
+    await persistSettings(); renderEffectSounds();
+  } else if(btn.dataset.act === 'useword'){
+    const wordIdx = parseInt(btn.dataset.word, 10);
+    state.outroWordSoundIds[wordIdx] = (state.outroWordSoundIds[wordIdx] === id) ? null : id;
+    if(state.outroWordSoundIds[wordIdx]) await preloadEffectBuffer(state.outroWordSoundIds[wordIdx]);
+    await persistSettings(); renderEffectSounds();
+  } else if(btn.dataset.act === 'del'){
+    state.effectSounds = state.effectSounds.filter(x=>x.id!==id);
+    if(state.customClickId === id) state.customClickId = null;
+    if(state.customChimeId === id) state.customChimeId = null;
+    state.outroWordSoundIds = state.outroWordSoundIds.map(x=> x===id ? null : x);
+    await DB.saveEffectsIndex(state.effectSounds); await DB.deleteEffectData(id);
+    await persistSettings(); renderEffectSounds();
+  } else if(btn.dataset.act === 'play'){
+    if(effectPreviewEl){ effectPreviewEl.pause(); effectPreviewEl = null; }
+    const dataUrl = await DB.loadEffectData(id); if(!dataUrl){ setStatus('Ses verisi bulunamadı.', 'err'); return; }
+    effectPreviewEl = new Audio(dataUrlToBlobUrl(dataUrl));
+    try{
+      await effectPreviewEl.play();
+      btn.textContent = '❚❚ Çalıyor';
+      effectPreviewEl.onended = ()=>{ btn.textContent = '▶ Dinle'; };
+    }catch(err){
+      setStatus('Ses çalınamadı: ' + err.message, 'err');
+    }
+  }
+});
+document.getElementById('effectList').addEventListener('change', async (e)=>{
+  const input = e.target.closest('.song-name-input'); if(!input) return;
+  const id = input.dataset.id; const s = state.effectSounds.find(x=>x.id===id); if(!s) return;
+  s.name = input.value.trim() || s.name; await DB.saveEffectsIndex(state.effectSounds);
+  renderEffectSounds();
+});
+
+/* ============================================================
+   HAYVAN SESLERİ — ayrı yapı: kütüphane + videonun içine zaman damgalı yerleştirme
+   ============================================================ */
+async function handleAnimalSoundFile(file){
+  const noteEl = document.getElementById('animalSoundConvertNote');
+  noteEl.style.display = 'block';
+  noteEl.textContent = 'Ses işleniyor...';
+  let dataUrl;
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const ac = getActx();
+    const audioBuffer = await ac.decodeAudioData(arrayBuffer.slice(0));
+    const durationSec = audioBuffer.duration || 10;
+    const targetSR = sampleRateForDuration(durationSec);
+    const wavBlob = audioBufferToWavBlob(audioBuffer, targetSR);
+    dataUrl = await blobToDataUrl(wavBlob);
+  }catch(e){ console.error(e); noteEl.textContent = 'Dönüştürme başarısız oldu: ' + e.message; return; }
+  if(dataUrl.length > 4_800_000){ noteEl.textContent = 'Bu dosya çok büyük, lütfen daha kısa/küçük bir dosya dene.'; return; }
+  const duration = await getAudioDuration(dataUrl);
+  const defaultName = file.name.replace(/\.[^.]+$/, '');
+  const id = 'as_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const saveResult = await DB.saveAnimalSoundData(id, dataUrl);
+  if(!saveResult){ noteEl.textContent = 'Kaydetme başarısız oldu, tekrar dener misin?'; return; }
+  state.animalSounds.push({ id, name: defaultName, durationSec: Math.round(duration), addedAt: Date.now(), converted: true, encVer: AUDIO_ENCODER_VERSION });
+  await DB.saveAnimalSoundsIndex(state.animalSounds);
+  await preloadAnimalSoundBuffer(id);
+  noteEl.textContent = 'Kaydedildi ve listede görünüyor ✓';
+  renderAnimalSounds();
+  setTimeout(()=>{ noteEl.style.display = 'none'; }, 3000);
+}
+document.getElementById('animalSoundFileInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  await handleAnimalSoundFile(file); e.target.value = '';
+});
+
+let animalSoundPreviewEl = null;
+function renderAnimalSounds(){
+  const list = document.getElementById('animalSoundList');
+  const sel = document.getElementById('animalSoundPlaceSelect');
+  list.innerHTML = '';
+  if(state.animalSounds.length === 0){
+    list.innerHTML = '<div class="empty-note">Henüz hayvan sesi eklenmedi.</div>';
+    sel.innerHTML = '<option value="">Önce bir ses ekle</option>';
+  } else {
+    sel.innerHTML = state.animalSounds.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    state.animalSounds.slice().reverse().forEach(s=>{
+      const div = document.createElement('div');
+      div.className = 'song-item';
+      div.innerHTML = `
+        <input class="song-name-input" type="text" value="${escapeHtml(s.name)}" data-id="${s.id}">
+        <div class="row"><span class="song-meta">${fmtDuration(s.durationSec)}${s.converted ? ' · mp4→mp3' : ''}</span></div>
+        <div class="row" style="margin-top:8px;">
+          <div class="actions">
+            <button class="btn-secondary mini-btn" data-act="play" data-id="${s.id}">▶ Dinle</button>
+            <button class="btn-danger mini-btn" data-act="del" data-id="${s.id}">Sil</button>
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+  }
+  renderAnimalSoundMarkers();
+}
+document.getElementById('animalSoundList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id; const s = state.animalSounds.find(x=>x.id===id); if(!s) return;
+  if(btn.dataset.act === 'del'){
+    state.animalSounds = state.animalSounds.filter(x=>x.id!==id);
+    state.animalSoundMarkers = state.animalSoundMarkers.filter(m=>m.soundId!==id);
+    await DB.saveAnimalSoundsIndex(state.animalSounds);
+    await DB.saveAnimalSoundMarkers(state.animalSoundMarkers);
+    await DB.deleteAnimalSoundData(id);
+    delete decodedBufferCache[id];
+    renderAnimalSounds();
+  } else if(btn.dataset.act === 'play'){
+    if(animalSoundPreviewEl){ animalSoundPreviewEl.pause(); animalSoundPreviewEl = null; }
+    const dataUrl = await DB.loadAnimalSoundData(id); if(!dataUrl){ setStatus('Ses verisi bulunamadı.', 'err'); return; }
+    animalSoundPreviewEl = new Audio(dataUrlToBlobUrl(dataUrl));
+    try{
+      await animalSoundPreviewEl.play();
+      btn.textContent = '❚❚ Çalıyor';
+      animalSoundPreviewEl.onended = ()=>{ btn.textContent = '▶ Dinle'; };
+    }catch(err){
+      setStatus('Ses çalınamadı: ' + err.message, 'err');
+    }
+  }
+});
+document.getElementById('animalSoundList').addEventListener('change', async (e)=>{
+  const input = e.target.closest('.song-name-input'); if(!input) return;
+  const id = input.dataset.id; const s = state.animalSounds.find(x=>x.id===id); if(!s) return;
+  s.name = input.value.trim() || s.name; await DB.saveAnimalSoundsIndex(state.animalSounds);
+  renderAnimalSounds();
+});
+
+function renderAnimalSoundMarkers(){
+  const list = document.getElementById('animalSoundMarkerList');
+  if(!list) return;
+  if(state.animalSoundMarkers.length === 0){ list.innerHTML = '<div class="empty-note">Henüz yerleştirme yok.</div>'; return; }
+  const sorted = state.animalSoundMarkers.slice().sort((a,b)=> a.time-b.time);
+  list.innerHTML = sorted.map(m=>{
+    const s = state.animalSounds.find(x=>x.id===m.soundId);
+    const name = s ? s.name : '(silinmiş ses)';
+    return `<div class="quote-item"><div class="row">
+      <span class="txt" style="margin:0;">${m.time.toFixed(1)}sn — ${escapeHtml(name)}</span>
+      <button class="btn-danger mini-btn" data-id="${m.id}">Sil</button>
+    </div></div>`;
+  }).join('');
+}
+document.getElementById('animalSoundMarkerList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  state.animalSoundMarkers = state.animalSoundMarkers.filter(m=>m.id!==btn.dataset.id);
+  await DB.saveAnimalSoundMarkers(state.animalSoundMarkers);
+  renderAnimalSoundMarkers();
+});
+document.getElementById('btnPlaceAnimalSound').addEventListener('click', async ()=>{
+  const soundId = document.getElementById('animalSoundPlaceSelect').value;
+  const timeVal = parseFloat(document.getElementById('animalSoundPlaceTime').value);
+  const maxDur = state.videoDurationSec || 8;
+  if(!soundId || isNaN(timeVal) || timeVal < 0 || timeVal > maxDur) return;
+  await preloadAnimalSoundBuffer(soundId);
+  state.animalSoundMarkers.push({ id:'m_'+Date.now()+'_'+Math.random().toString(36).slice(2,5), soundId, time: timeVal });
+  await DB.saveAnimalSoundMarkers(state.animalSoundMarkers);
+  document.getElementById('animalSoundPlaceTime').value = '';
+  renderAnimalSoundMarkers();
+});
+
+/* ============================================================
+   METİN SARMA
+   ============================================================ */
+function wrapText(text, fontSize, maxWidth, fontFamily){
+  ctx.font = `800 ${fontSize}px ${fontFamily || "'Segoe UI', sans-serif"}`;
+  const words = text.trim().split(/\s+/);
+  const lines = []; let cur = '';
+  for(const w of words){
+    const test = cur ? cur + ' ' + w : w;
+    if(ctx.measureText(test).width > maxWidth && cur){ lines.push(cur); cur = w; } else { cur = test; }
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+function fontSizeFor(text){
+  const len = text.length;
+  if(len <= 24) return 76; if(len <= 48) return 58; if(len <= 90) return 44; return 34;
+}
+
+/* ============================================================
+   ANİMASYON
+   ============================================================ */
+let animStart = null; let lastClickLine = -1; let chimePlayed = false; let lastHitLine = -1; let lastHitTime = -9999;
+let playedSoundMarkers = new Set();
+let animalState = { x: W*0.5, y: H*0.22, targetX: W*0.5, targetY: H*0.22, nextMoveAt: 0 };
+let animalTrail = [];
+let running = false; let recordDestNode = null;
+function getCoreDurationMs(){ return (state.videoDurationSec || 8) * 1000; }
+const OUTRO_SPAN = 1400, OUTRO_STAGGER = 200, OUTRO_LINE_DUR = 380;
+const GREEN_RGB = {r:141,g:198,b:63}, WHITE_RGB = {r:245,g:245,b:245};
+function lerpColor(c1,c2,t){ return { r:c1.r+(c2.r-c1.r)*t, g:c1.g+(c2.g-c1.g)*t, b:c1.b+(c2.b-c1.b)*t }; }
+
+function pickAnimalPosition(startY, blockHeight, fontSize, forceZone){
+  const textTop = startY - fontSize*0.3;
+  const textBottom = startY + blockHeight + fontSize*0.15;
+  const brandTop = H - 92;
+  const aboveZone = (textTop - 60 > 60) ? {minY:60, maxY:Math.max(70, textTop-40)} : null;
+  const belowZone = (brandTop - textBottom > 60) ? {minY:textBottom+30, maxY:brandTop} : null;
+  let z;
+  if(forceZone === 'top') z = aboveZone || belowZone;
+  else if(forceZone === 'bottom') z = belowZone || aboveZone;
+  else {
+    const available = [aboveZone, belowZone].filter(Boolean);
+    z = available.length ? available[Math.floor(Math.random()*available.length)] : null;
+  }
+  if(!z) z = {minY:60, maxY:150};
+  return { x: W*0.15 + Math.random()*W*0.7, y: z.minY + Math.random()*(z.maxY - z.minY) };
+}
+function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+
+function drawFrame(now){
+  try{
+    drawFrameInner(now);
+  }catch(err){
+    console.error('drawFrame hatası:', err);
+    try{
+      ctx.fillStyle = '#000000'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#ff6b6b'; ctx.font = '20px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText('Çizim hatası:', 30, 80);
+      ctx.font = '15px monospace';
+      const msg = String(err && err.message || err);
+      for(let i=0;i<msg.length;i+=34){ ctx.fillText(msg.slice(i,i+34), 30, 115 + Math.floor(i/34)*22); }
+    }catch(e2){}
+    const statusEl = document.getElementById('status');
+    if(statusEl) setStatus('Çizim hatası: ' + (err && err.message || err), 'err');
+  }
+  if(running) requestAnimationFrame(drawFrame);
+}
+function drawFrameInner(now){
+  if(animStart === null) animStart = now;
+  const t = now - animStart;
+  ctx.fillStyle = '#000000'; ctx.fillRect(0,0,W,H);
+  const bgStyle = state.backgroundStyle || 'solid';
+  if(bgStyle === 'vignette'){
+    const grad = ctx.createRadialGradient(W/2, H*0.4, 0, W/2, H*0.4, H*0.75);
+    grad.addColorStop(0, 'rgba(95,140,40,0.16)');
+    grad.addColorStop(0.6, 'rgba(20,30,10,0.08)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.save();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  } else if(bgStyle === 'grain'){
+    ctx.save();
+    for(let i=0;i<90;i++){
+      const gx = Math.random()*W, gy = Math.random()*H;
+      const ga = Math.random()*0.05;
+      ctx.fillStyle = `rgba(255,255,255,${ga})`;
+      ctx.fillRect(gx, gy, 1.4, 1.4);
+    }
+    ctx.restore();
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.shadowBlur = 0;
+
+  const quote = state.activeQuote || 'JUST ACT NOW.';
+  const fontFamily = state.fontFamily || "'Segoe UI', sans-serif";
+  const fontSize = state.fontSizeMode === 'manual' ? (state.fontSizeManual || 48) : fontSizeFor(quote);
+  const maxWidth = W - 90;
+  const lines = wrapText(quote, fontSize, maxWidth, fontFamily);
+  const lineHeight = fontSize * 1.15;
+  const blockHeight = lines.length * lineHeight;
+  const startY = H*0.44 - blockHeight/2;
+  const highlightList = (state.highlightWord||'').split(',').map(w=>w.trim().toLowerCase()).filter(Boolean);
+  const isYogun = state.template === 'yogun';
+
+  let globalWordIndex = 0;
+  const totalWordCount = lines.reduce((sum,l)=> sum + l.split(' ').length, 0);
+  const animSpeedMult = (state.animSpeed || 100) / 100;
+  const WORD_STAGGER = 90 / animSpeedMult, WORD_DUR = 380 / animSpeedMult;
+  ctx.font = `800 ${fontSize}px ${fontFamily}`;
+  ctx.textBaseline = 'alphabetic';
+
+  if(state.mergeLineMarkers && lines.length > 0){
+    // tüm paragrafı tek bir çizgiyle işaretle (ilk kelimenin belirmesiyle senkron)
+    let mergedP = t / WORD_DUR; mergedP = Math.max(0, Math.min(1, mergedP));
+    const mergedAlpha = easeOutCubic(mergedP);
+    if(mergedAlpha > 0){
+      const topY = startY + fontSize*0.2;
+      const bottomY = startY + (lines.length-1)*lineHeight + fontSize*1.08;
+      ctx.save();
+      ctx.globalAlpha = mergedAlpha;
+      ctx.fillStyle = '#8dc63f';
+      ctx.fillRect(40, topY, 4, bottomY - topY);
+      ctx.restore();
+    }
+  }
+
+  lines.forEach((line, i)=>{
+    const words = line.split(' ');
+    let x = 60;
+    const y = startY + i*lineHeight + fontSize;
+
+    if(!state.mergeLineMarkers){
+      // satır başı çizgisi (logo yeşili) — satırın ilk kelimesiyle aynı anda belirir
+      const lineStartDelay = globalWordIndex * WORD_STAGGER;
+      let lineP = (t - lineStartDelay) / WORD_DUR; lineP = Math.max(0, Math.min(1, lineP));
+      const lineAlpha = easeOutCubic(lineP);
+      if(lineAlpha > 0){
+        ctx.save();
+        ctx.globalAlpha = lineAlpha;
+        ctx.fillStyle = '#8dc63f';
+        ctx.fillRect(40, y - fontSize*0.8, 4, fontSize*0.88);
+        ctx.restore();
+      }
+    }
+
+    words.forEach((w)=>{
+      const delay = globalWordIndex * WORD_STAGGER;
+      let p = (t - delay) / WORD_DUR; p = Math.max(0, Math.min(1, p));
+      const eased = easeOutCubic(p);
+      const animType = state.textAnimType || 'slide';
+      let offsetX = 0, offsetY = 0, wordScale = 1;
+      if(animType === 'slide'){ offsetX = (1-eased) * -70; offsetY = (1-eased) * 10; }
+      else if(animType === 'fade'){ /* sadece opaklık, konum sabit */ }
+      else if(animType === 'drop'){ offsetY = (1-eased) * -60; }
+      else if(animType === 'pop'){ wordScale = 0.4 + eased*0.6; }
+      const alpha = eased;
+      if(p > 0 && lastClickLine < globalWordIndex){ playClick(recordDestNode); lastClickLine = globalWordIndex; }
+
+      const isHl = highlightList.includes(w.toLowerCase().replace(/[.,!?]/g,''));
+      const wordWidthNow = ctx.measureText(w).width;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = isHl ? '#8dc63f' : '#f5f5f5';
+      if(isYogun && isHl){ ctx.shadowColor = '#8dc63f'; ctx.shadowBlur = 18; } else { ctx.shadowBlur = 0; }
+      if(wordScale !== 1){
+        ctx.translate(x + wordWidthNow/2, y - fontSize*0.35);
+        ctx.scale(wordScale, wordScale);
+        ctx.fillText(w, -wordWidthNow/2, fontSize*0.35);
+      } else {
+        ctx.fillText(w, x + offsetX, y + offsetY);
+      }
+      ctx.restore();
+
+      x += ctx.measureText(w + ' ').width;
+      globalWordIndex++;
+    });
+  });
+
+  const totalRevealTime = totalWordCount * WORD_STAGGER + WORD_DUR;
+  if(t > totalRevealTime + 150 && !chimePlayed){ playChime(recordDestNode); chimePlayed = true; }
+
+  if(state.animalSoundMarkers && state.animalSoundMarkers.length){
+    const tSec = t / 1000;
+    state.animalSoundMarkers.forEach(m=>{
+      if(!playedSoundMarkers.has(m.id) && tSec >= m.time){
+        playedSoundMarkers.add(m.id);
+        const buf = decodedBufferCache[m.soundId];
+        if(buf) playBuffer(buf, recordDestNode, 0.85);
+      }
+    });
+  }
+
+  const brandY = H - 46;
+  ctx.font = `800 22px 'Segoe UI', sans-serif`;
+  const parts = [ {txt:'JUST ', col:'#f5f5f5'}, {txt:'ACT ',  col:'#8dc63f'}, {txt:'NOW',  col:'#f5f5f5'} ];
+  let totalBrandW = parts.reduce((s,p)=> s + ctx.measureText(p.txt).width, 0) + ctx.measureText('.').width;
+  let bx = (W - totalBrandW)/2;
+  parts.forEach(p=>{ ctx.fillStyle = p.col; ctx.fillText(p.txt, bx, brandY); bx += ctx.measureText(p.txt).width; });
+  ctx.fillStyle = '#8dc63f'; ctx.beginPath(); ctx.arc(bx+6, brandY-6, 5, 0, Math.PI*2); ctx.fill();
+
+  /* ---- animal (varsayılan: sabit duruyor; diğer modlar yeniden konumlandırır) ---- */
+  const posMode = state.animalPositionMode || 'fixed';
+  if(posMode !== 'fixed' && now > animalState.nextMoveAt){
+    const forceZone = posMode === 'top' ? 'top' : (posMode === 'bottom' ? 'bottom' : null);
+    const pos = pickAnimalPosition(startY, blockHeight, fontSize, forceZone);
+    animalState.targetX = pos.x; animalState.targetY = pos.y;
+    animalState.x = pos.x; animalState.y = pos.y;
+    animalState.nextMoveAt = now + 900 + Math.random()*1400;
+  }
+
+  let opacity;
+  if(posMode !== 'fixed'){
+    // hard cut: 0 opaklık hemen ışınlanmadan önce, ışınlandığı an 100 opaklık
+    const timeToMove = animalState.nextMoveAt - now;
+    opacity = (timeToMove > 0 && timeToMove < 140) ? 0 : 1;
+  } else {
+    const blink = (Math.sin(now/220) + 1) / 2;
+    opacity = 0.35 + blink*0.65;
+  }
+
+  const animalObj = ANIMALS.find(a=>a.id===state.animal) || ANIMALS[0];
+  const iconSize = Math.round(state.animalSize || 72);
+  const baseIcon = getAnimalIcon(animalObj, iconSize);
+  const icon = state.animalEffects.colorPulse ? getAnimalIconWithPulse(baseIcon, iconSize, now) : baseIcon;
+
+  let drawX = animalState.x, drawY = animalState.y;
+  let rotation = 0, scale = 1, scaleX = 1;
+  if(state.animalEffects.bounce){
+    const s = fxSpeedOf('bounce'), i = fxIntensityOf('bounce');
+    drawY += Math.sin(now/180*s) * 10 * i;
+    scale = 1 + Math.sin(now/180*s)*0.08*i;
+  }
+  if(state.animalEffects.wiggle){
+    const s = fxSpeedOf('wiggle'), i = fxIntensityOf('wiggle');
+    rotation = Math.sin(now/260*s) * 0.3 * i;
+  }
+  if(state.animalEffects.shake){
+    const i = fxIntensityOf('shake');
+    drawX += (Math.random()-0.5) * 9 * i;
+    drawY += (Math.random()-0.5) * 9 * i;
+  }
+  if(state.animalEffects.flip){
+    const s = fxSpeedOf('flip');
+    scaleX = Math.sin(now/420*s) >= 0 ? 1 : -1;
+  }
+  if(state.animalEffects.pulseScale){
+    const s = fxSpeedOf('pulseScale'), i = fxIntensityOf('pulseScale');
+    scale *= 1 + Math.sin(now/260*s) * 0.14 * i;
+  }
+
+  if(state.animalEffects.trail && posMode === 'fixed'){
+    const i = fxIntensityOf('trail');
+    const trailLife = 380 * Math.max(0.4, i);
+    animalTrail.push({x:drawX, y:drawY, t:now});
+    animalTrail = animalTrail.filter(p => now-p.t < trailLife);
+    animalTrail.forEach(p=>{
+      const age = (now-p.t)/trailLife;
+      ctx.save();
+      ctx.globalAlpha = (1-age) * 0.22 * i * opacity;
+      ctx.drawImage(baseIcon, p.x-iconSize/2, p.y-iconSize/2, iconSize, iconSize);
+      ctx.restore();
+    });
+  } else if(animalTrail.length){ animalTrail = []; }
+
+  if(opacity > 0){
+    if(state.animalEffects.glow){
+      const s = fxSpeedOf('glow'), i = fxIntensityOf('glow');
+      const glowT = (Math.sin(now/260*s)+1)/2;
+      const gc = lerpColor(GREEN_RGB, WHITE_RGB, glowT);
+      const glowRadius = iconSize * (0.7 + 0.35*i);
+      const glowAlpha = Math.min(1, 0.55*i) * opacity;
+      const grad = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, glowRadius);
+      grad.addColorStop(0, `rgba(${gc.r|0},${gc.g|0},${gc.b|0},${glowAlpha})`);
+      grad.addColorStop(1, `rgba(${gc.r|0},${gc.g|0},${gc.b|0},0)`);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(drawX, drawY, glowRadius, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.translate(drawX, drawY);
+    ctx.rotate(rotation);
+    ctx.scale(scale*scaleX, scale);
+    ctx.drawImage(icon, -iconSize/2, -iconSize/2, iconSize, iconSize);
+    ctx.restore();
+  }
+
+  /* ---- Logo ile Bitiş (opsiyonel) — sabit 8sn'nin son ~1.5sn'si ---- */
+  if(state.endingLogo){
+    const outroStart = getCoreDurationMs() - OUTRO_SPAN;
+    const ot = t - outroStart;
+    if(ot > 0){
+      const timeSinceHit = t - lastHitTime;
+      const shakeT = Math.max(0, 1 - timeSinceHit/440);
+      const shakeX = (Math.random()-0.5) * 22 * shakeT;
+      const shakeY = (Math.random()-0.5) * 22 * shakeT;
+
+      ctx.save();
+      ctx.translate(shakeX, shakeY);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(-20,-20,W+40,H+40);
+      const outroWords = [ {txt:'JUST', col:'#f5f5f5'}, {txt:'ACT', col:'#8dc63f'}, {txt:'NOW', col:'#f5f5f5', dot:true} ];
+      const bigFont = 88;
+      const bigLineHeight = bigFont*1.05;
+      const totalH = outroWords.length*bigLineHeight;
+      const oStartY = H/2 - totalH/2 + bigFont*0.75;
+      ctx.font = `800 ${bigFont}px 'Segoe UI', sans-serif`;
+      outroWords.forEach((w, i)=>{
+        const delay = i*OUTRO_STAGGER; const dur = OUTRO_LINE_DUR;
+        let p = (ot-delay)/dur; p = Math.max(0, Math.min(1,p));
+        const eased = easeOutCubic(p);
+        if(p > 0 && lastHitLine < i){
+          const customSoundId = state.outroWordSoundIds[i];
+          const customBuf = customSoundId ? decodedBufferCache[customSoundId] : null;
+          if(customBuf){ playBuffer(customBuf, recordDestNode, 0.9); } else { playHit(recordDestNode); }
+          lastHitLine = i; lastHitTime = t;
+        }
+        const scaleAnim = 0.7 + 0.3*eased;
+        const y = oStartY + i*bigLineHeight;
+        ctx.save();
+        ctx.globalAlpha = eased;
+        ctx.translate(W/2, y);
+        ctx.scale(scaleAnim, scaleAnim);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = w.col;
+        ctx.fillText(w.txt, 0, 0);
+        if(w.dot){
+          const wordWidth = ctx.measureText(w.txt).width;
+          ctx.fillStyle = '#8dc63f';
+          ctx.beginPath();
+          ctx.arc(wordWidth/2 + bigFont*0.16, bigFont*0.06, bigFont*0.1, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      });
+      ctx.restore();
+
+      if(ot < 220){
+        ctx.save();
+        ctx.globalAlpha = (1 - ot/220) * 0.55;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+    }
+  }
+}
+function setActiveQuote(text){
+  state.activeQuote = text;
+  const inputEl = document.getElementById('templateTextInput');
+  if(inputEl) inputEl.value = text;
+}
+function replayAnimation(){
+  animStart = null; lastClickLine = -1; chimePlayed = false; lastHitLine = -1; lastHitTime = -9999; animalTrail = [];
+  playedSoundMarkers = new Set();
+  const fixedPos = { x: W*(state.animalPosX/100), y: H*(state.animalPosY/100) };
+  animalState.x = fixedPos.x; animalState.y = fixedPos.y;
+  animalState.targetX = fixedPos.x; animalState.targetY = fixedPos.y;
+  animalState.nextMoveAt = 0;
+  if(!running){ running = true; requestAnimationFrame(drawFrame); }
+}
+
+/* ============================================================
+   KAYIT / İNDİRME
+   ============================================================ */
+let lastVideoUrl = null;
+let lastVideoName = null;
+let lastVideoLogId = null;
+
+async function downloadFinal(){
+  const statusEl = document.getElementById('status'); const btn = document.getElementById('btnDownload');
+  btn.disabled = true; statusEl.textContent = 'Kaydediliyor...';
+  try{
+    const ac = getActx();
+    if(ac.state === 'suspended'){ try{ await ac.resume(); }catch(e){ console.error('AudioContext resume hatası:', e); } }
+    const dest = ac.createMediaStreamDestination(); recordDestNode = dest;
+    const videoStream = canvas.captureStream(30);
+    const combined = new MediaStream([ ...videoStream.getVideoTracks(), ...dest.stream.getAudioTracks() ]);
+    const candidates = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    const mimeType = candidates.find(c => window.MediaRecorder && MediaRecorder.isTypeSupported(c)) || '';
+    let recorder;
+    try{ recorder = new MediaRecorder(combined, mimeType ? {mimeType} : undefined); }
+    catch(e){ setStatus('Bu tarayıcı video kaydını desteklemiyor.', 'err'); btn.disabled = false; return; }
+    const chunks = [];
+    recorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+    recorder.onerror = (ev) => {
+      console.error('MediaRecorder hatası:', ev);
+      setStatus('Kayıt hatası: ' + (ev && ev.error ? ev.error.message : 'bilinmeyen hata'), 'err');
+      btn.disabled = false; recordDestNode = null;
+    };
+    recorder.onstop = async () => {
+      try{
+        const blob = new Blob(chunks, {type: mimeType || 'video/webm'});
+        if(lastVideoUrl) URL.revokeObjectURL(lastVideoUrl);
+        lastVideoUrl = URL.createObjectURL(blob);
+        lastVideoName = 'just-act-now-edit.webm';
+        const a = document.createElement('a'); a.href = lastVideoUrl; a.download = lastVideoName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setStatus('İndirildi: ' + lastVideoName + ' ✓', 'ok');
+        btn.disabled = false; recordDestNode = null;
+        updateLastVideoStatus();
+
+        lastVideoLogId = 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+        state.videoLog.push({
+          id: lastVideoLogId, quoteText: state.activeQuote, animal: state.animal,
+          timestamp: Date.now(), sharedTikTok: false, sharedInstagram: false,
+        });
+        await DB.saveVideoLog(state.videoLog);
+        if(typeof renderQuotes === 'function') renderQuotes();
+        if(appReady && typeof renderDashboard === 'function') renderDashboard();
+      }catch(err){
+        console.error('İndirme tamamlama hatası:', err);
+        setStatus('İndirme sırasında hata: ' + err.message, 'err');
+        btn.disabled = false; recordDestNode = null;
+      }
+    };
+    recorder.start(); replayAnimation();
+    setTimeout(()=> recorder.stop(), getCoreDurationMs() + 200);
+  }catch(err){
+    console.error('downloadFinal hatası:', err);
+    setStatus('Video hazırlanamadı: ' + err.message, 'err');
+    btn.disabled = false; recordDestNode = null;
+  }
+}
+function updateLastVideoStatus(){
+  const el = document.getElementById('lastVideoStatus');
+  if(!el) return;
+  el.textContent = lastVideoUrl ? ('Son indirilen video: ' + lastVideoName) : 'Henüz indirilmiş bir video yok.';
+}
+
+/* ============================================================
+   UI: HAYVAN GRID + EFEKT SEÇİCİ
+   ============================================================ */
+function renderAnimalGrid(){
+  const grid = document.getElementById('animalGrid');
+  grid.innerHTML = '';
+  ANIMALS.forEach(a=>{
+    const div = document.createElement('div');
+    div.className = 'animal-opt' + (state.animal===a.id ? ' active':'');
+    div.innerHTML = `<span class="emoji">${a.emoji}</span>${a.name}<span class="blurb">${a.blurb}</span>`;
+    div.onclick = ()=>{ state.animal = a.id; persistSettings(); renderAnimalGrid(); };
+    grid.appendChild(div);
+  });
+}
+
+/* ============================================================
+   UI: SÖZ LİSTESİ + ANALİZ
+   ============================================================ */
+function videoStatusFor(q){
+  const matches = state.videoLog.filter(v=>v.quoteText === q.text);
+  if(matches.length === 0) return {label:'Taslak', cls:''};
+  const latest = matches[matches.length-1];
+  if(latest.sharedTikTok && latest.sharedInstagram) return {label:'Paylaşıldı (TikTok + Instagram)', cls:'active-badge'};
+  if(latest.sharedTikTok) return {label:'Paylaşıldı (TikTok)', cls:'active-badge'};
+  if(latest.sharedInstagram) return {label:'Paylaşıldı (Instagram)', cls:'active-badge'};
+  return {label:'Oluşturuldu', cls:'unused'};
+}
+async function generateVideoForQuote(quoteId){
+  const q = state.quotes.find(x=>x.id===quoteId);
+  if(!q) return;
+  setTab('editor');
+  setActiveQuote(q.text);
+  q.used = true;
+  await DB.saveQuotes(state.quotes);
+  replayAnimation();
+  await downloadFinal();
+}
+function renderQuotes(){
+  const list = document.getElementById('quoteList');
+  if(!list) return;
+  list.innerHTML = '';
+  if(state.quotes.length === 0){ list.innerHTML = '<div class="empty-note">Henüz söz eklenmedi.</div>'; }
+  else{
+    state.quotes.slice().reverse().forEach(q=>{
+      const div = document.createElement('div');
+      const isActive = q.text === state.activeQuote;
+      const vs = videoStatusFor(q);
+      div.className = 'quote-item' + (isActive ? ' active' : '');
+      let captionBlock = '';
+      if(q.captionStatus === 'pending'){
+        captionBlock = `<div class="song-meta">✦ açıklama hazırlanıyor...</div>`;
+      } else if(q.captionStatus === 'error'){
+        captionBlock = `<div class="song-meta">Açıklama oluşturulamadı. <button class="btn-secondary mini-btn" data-act="retry-caption" data-id="${q.id}">Tekrar Dene</button></div>`;
+      } else if(q.caption){
+        const chips = (q.hashtags||[]).map(h=>`<span class="hashtag-chip">#${escapeHtml(h.replace(/^#/,''))}</span>`).join('');
+        captionBlock = `<div class="song-meta" style="margin-top:6px; line-height:1.4;">${escapeHtml(q.caption)}</div><div class="hashtag-chips">${chips}</div>`;
+      }
+      div.innerHTML = `
+        <div class="txt">${escapeHtml(q.text)}</div>
+        <div class="row">
+          <span class="badge ${vs.cls || 'unused'}">${vs.label}</span>
+          ${isActive ? '<span class="badge active-badge">şu an önizlemede</span>' : ''}
+        </div>
+        ${captionBlock}
+        <div class="row" style="margin-top:8px;">
+          <div class="actions">
+            <button class="btn-secondary mini-btn" data-act="apply" data-id="${q.id}">Önizlemeye Uygula</button>
+            <button class="btn-primary mini-btn" data-act="generate" data-id="${q.id}">Videoyu Oluştur</button>
+            <button class="btn-secondary mini-btn" data-act="toqueue" data-id="${q.id}">Yayınla'ya Gönder</button>
+            <button class="btn-danger mini-btn" data-act="del" data-id="${q.id}">Sil</button>
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+  }
+  renderAnalytics();
+}
+function renderAnalytics(){
+  const total = state.quotes.length;
+  const used = state.quotes.filter(q=>q.used).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statUsed').textContent = used;
+  document.getElementById('statUnused').textContent = total - used;
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function setStatus(msg, type, elId){
+  const el = document.getElementById(elId || 'status');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.remove('status-ok','status-err');
+  if(type === 'ok') el.classList.add('status-ok');
+  else if(type === 'err') el.classList.add('status-err');
+}
+
+document.getElementById('quoteList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id; const q = state.quotes.find(x=>x.id===id); if(!q) return;
+  if(btn.dataset.act === 'apply'){
+    setActiveQuote(q.text); q.used = true;
+    await DB.saveQuotes(state.quotes); renderQuotes(); replayAnimation();
+    setStatus('Söz şablona uygulandı ✓', 'ok');
+  } else if(btn.dataset.act === 'del'){
+    state.quotes = state.quotes.filter(x=>x.id!==id);
+    await DB.saveQuotes(state.quotes); renderQuotes();
+  } else if(btn.dataset.act === 'generate'){
+    btn.disabled = true; const oldTxt = btn.textContent; btn.textContent = 'Oluşturuluyor...';
+    try{ await generateVideoForQuote(id); } finally { btn.disabled = false; btn.textContent = oldTxt; renderQuotes(); }
+  } else if(btn.dataset.act === 'toqueue'){
+    document.getElementById('captionText').value = q.caption || '';
+    state.hashtags = q.hashtags || [];
+    renderHashtags();
+    await persistPublish();
+    setActiveQuote(q.text);
+    setTab('publish');
+  } else if(btn.dataset.act === 'retry-caption'){
+    autoCaptionForQuote(id);
+  }
+});
+document.getElementById('btnAddQuote').addEventListener('click', async ()=>{
+  const ta = document.getElementById('newQuote'); const text = ta.value.trim(); if(!text) return;
+  const newId = 'q_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  state.quotes.push({ id: newId, text, used:false, caption:'', hashtags:[], captionStatus:'pending' });
+  ta.value = '';
+  setActiveQuote(text);
+  await DB.saveQuotes(state.quotes);
+  renderQuotes();
+  if(typeof renderVideosPanel === 'function') renderVideosPanel();
+  replayAnimation();
+  setStatus('Söz önizlemeye eklendi ✓', 'ok');
+  autoCaptionForQuote(newId);
+});
+document.getElementById('btnClearAll').addEventListener('click', async ()=>{
+  if(!confirm('Tüm sözler silinecek ve kullanım durumu sıfırlanacak. Emin misin?')) return;
+  state.quotes = []; await DB.saveQuotes(state.quotes); renderQuotes();
+});
+
+/* ============================================================
+   UI: DİĞER KONTROLLER
+   ============================================================ */
+document.getElementById('templateSelect').addEventListener('change', (e)=>{ state.template = e.target.value; persistSettings(); });
+document.getElementById('btnReflectText').addEventListener('click', ()=>{
+  const text = document.getElementById('templateTextInput').value.trim();
+  if(!text) return;
+  state.activeQuote = text;
+  replayAnimation();
+  if(typeof renderQuotes === 'function') renderQuotes();
+  const statusEl = document.getElementById('status');
+  if(statusEl) setStatus('Yazı önizlemeye yansıtıldı ✓', 'ok');
+});
+document.getElementById('highlightWord').addEventListener('input', (e)=>{ state.highlightWord = e.target.value; persistSettingsDebounced(); });
+document.getElementById('backgroundStyleSelect').addEventListener('change', (e)=>{
+  state.backgroundStyle = e.target.value;
+  persistSettings();
+});
+document.getElementById('btnRandomize').addEventListener('click', async ()=>{
+  const randomAnimal = ANIMALS[Math.floor(Math.random()*ANIMALS.length)];
+  state.animal = randomAnimal.id;
+  const fontOptions = ["'Segoe UI', sans-serif","Arial, sans-serif","Georgia, serif","Impact, sans-serif","'Poppins', sans-serif","'Montserrat', sans-serif","'Bebas Neue', sans-serif","'Oswald', sans-serif"];
+  state.fontFamily = fontOptions[Math.floor(Math.random()*fontOptions.length)];
+  const bgOptions = ['solid','vignette','grain'];
+  state.backgroundStyle = bgOptions[Math.floor(Math.random()*bgOptions.length)];
+  const animOptions = ['slide','fade','drop','pop'];
+  state.textAnimType = animOptions[Math.floor(Math.random()*animOptions.length)];
+  Object.keys(state.animalEffects).forEach(k=> state.animalEffects[k] = false);
+  const effectKeys = Object.keys(state.animalEffects);
+  const chosenEffect = effectKeys[Math.floor(Math.random()*effectKeys.length)];
+  state.animalEffects[chosenEffect] = true;
+
+  document.getElementById('fontFamilySelect').value = state.fontFamily;
+  document.getElementById('backgroundStyleSelect').value = state.backgroundStyle;
+  document.getElementById('textAnimTypeSelect').value = state.textAnimType;
+  renderAnimalGrid();
+  renderEffectsList();
+  await persistSettings();
+  replayAnimation();
+  setStatus(`🎲 Rastgele: ${randomAnimal.emoji} ${randomAnimal.name} + yeni stil uygulandı`, 'ok');
+});
+function collectPresetSnapshot(){
+  return {
+    template: state.template, highlightWord: state.highlightWord, backgroundStyle: state.backgroundStyle,
+    endingLogo: state.endingLogo, mergeLineMarkers: state.mergeLineMarkers, videoDurationSec: state.videoDurationSec,
+    textAnimType: state.textAnimType, animSpeed: state.animSpeed,
+    fontFamily: state.fontFamily, fontSizeMode: state.fontSizeMode, fontSizeManual: state.fontSizeManual,
+    animal: state.animal, animalPositionMode: state.animalPositionMode, animalSize: state.animalSize,
+    animalPosX: state.animalPosX, animalPosY: state.animalPosY,
+    animalEffects: JSON.parse(JSON.stringify(state.animalEffects)),
+    effectParams: JSON.parse(JSON.stringify(state.effectParams)),
+    soundType: state.soundType, soundChime: state.soundChime,
+    clickPitch: state.clickPitch, clickVolume: state.clickVolume,
+    chimePitchMult: state.chimePitchMult, chimeVolume: state.chimeVolume,
+  };
+}
+async function applyPresetSnapshot(snap){
+  Object.assign(state, snap);
+  document.getElementById('templateSelect').value = state.template;
+  document.getElementById('highlightWord').value = state.highlightWord;
+  document.getElementById('backgroundStyleSelect').value = state.backgroundStyle;
+  document.getElementById('toggleEndingLogo').classList.toggle('on', state.endingLogo);
+  document.getElementById('toggleMergeLines').classList.toggle('on', state.mergeLineMarkers);
+  document.getElementById('videoDurationSlider').value = state.videoDurationSec;
+  document.getElementById('videoDurationLabel').textContent = state.videoDurationSec + 'sn';
+  document.getElementById('textAnimTypeSelect').value = state.textAnimType;
+  document.getElementById('animSpeedSlider').value = state.animSpeed;
+  document.getElementById('animSpeedLabel').textContent = state.animSpeed + '%';
+  document.getElementById('fontFamilySelect').value = state.fontFamily;
+  document.getElementById('toggleAutoSize').classList.toggle('on', state.fontSizeMode === 'auto');
+  document.getElementById('fontSizeSlider').value = state.fontSizeManual;
+  document.getElementById('fontSizeLabel').textContent = state.fontSizeManual + 'px';
+  document.getElementById('animalModeSelect').value = state.animalPositionMode;
+  document.getElementById('animalSizeSlider').value = state.animalSize;
+  document.getElementById('animalSizeLabel').textContent = state.animalSize + 'px';
+  document.getElementById('animalPosXSlider').value = state.animalPosX;
+  document.getElementById('animalPosXLabel').textContent = state.animalPosX + '%';
+  document.getElementById('animalPosYSlider').value = state.animalPosY;
+  document.getElementById('animalPosYLabel').textContent = state.animalPosY + '%';
+  document.getElementById('toggleType').classList.toggle('on', state.soundType);
+  document.getElementById('toggleChime').classList.toggle('on', state.soundChime);
+  document.getElementById('typePitchSlider').value = state.clickPitch;
+  document.getElementById('typeVolumeSlider').value = state.clickVolume;
+  document.getElementById('chimePitchSlider').value = state.chimePitchMult;
+  document.getElementById('chimeVolumeSlider').value = state.chimeVolume;
+  renderAnimalGrid();
+  renderEffectsList();
+  await persistSettings();
+  replayAnimation();
+}
+function renderPresetList(){
+  const list = document.getElementById('presetList');
+  if(!list) return;
+  if(!state.presets || state.presets.length === 0){ list.innerHTML = '<div class="empty-note">Henüz ön ayar kaydedilmedi.</div>'; return; }
+  list.innerHTML = state.presets.slice().reverse().map(p=>`
+    <div class="quote-item">
+      <div class="row">
+        <span class="txt" style="margin:0;">${escapeHtml(p.name)}</span>
+        <div class="actions">
+          <button class="btn-primary mini-btn" data-act="apply" data-id="${p.id}">Uygula</button>
+          <button class="btn-danger mini-btn" data-act="del" data-id="${p.id}">Sil</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+document.getElementById('btnSavePreset').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('presetNameInput');
+  const name = nameInput.value.trim();
+  if(!name) return;
+  if(!state.presets) state.presets = [];
+  state.presets.push({ id:'preset_'+Date.now(), name, snapshot: collectPresetSnapshot() });
+  await DB.savePresets(state.presets);
+  nameInput.value = '';
+  renderPresetList();
+  setStatus(`"${name}" ön ayarı kaydedildi ✓`, 'ok');
+});
+document.getElementById('presetList').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const id = btn.dataset.id;
+  const preset = (state.presets||[]).find(p=>p.id===id);
+  if(!preset) return;
+  if(btn.dataset.act === 'apply'){
+    await applyPresetSnapshot(preset.snapshot);
+    setStatus(`"${preset.name}" ön ayarı uygulandı ✓`, 'ok');
+  } else if(btn.dataset.act === 'del'){
+    state.presets = state.presets.filter(p=>p.id!==id);
+    await DB.savePresets(state.presets);
+    renderPresetList();
+  }
+});
+document.getElementById('fontFamilySelect').addEventListener('change', (e)=>{
+  state.fontFamily = e.target.value;
+  persistSettings();
+});
+document.getElementById('fontSizeSlider').addEventListener('input', (e)=>{
+  state.fontSizeManual = parseInt(e.target.value, 10);
+  document.getElementById('fontSizeLabel').textContent = state.fontSizeManual + 'px';
+  if(state.fontSizeMode !== 'manual'){
+    state.fontSizeMode = 'manual';
+    document.getElementById('toggleAutoSize').classList.remove('on');
+  }
+  persistSettingsDebounced();
+});
+function bindSwitch(elId, key){
+  const el = document.getElementById(elId);
+  el.addEventListener('click', ()=>{ state[key] = !state[key]; el.classList.toggle('on', state[key]); persistSettings(); });
+}
+bindSwitch('toggleType', 'soundType'); bindSwitch('toggleChime', 'soundChime'); bindSwitch('toggleEndingLogo', 'endingLogo'); bindSwitch('toggleMergeLines', 'mergeLineMarkers');
+document.getElementById('videoDurationSlider').addEventListener('input', (e)=>{
+  state.videoDurationSec = parseFloat(e.target.value);
+  document.getElementById('videoDurationLabel').textContent = state.videoDurationSec + 'sn';
+  const rangeLabel = document.getElementById('animalSoundRangeLabel');
+  if(rangeLabel) rangeLabel.textContent = `(${state.videoDurationSec}sn video içinde)`;
+  persistSettingsDebounced();
+});
+document.getElementById('textAnimTypeSelect').addEventListener('change', (e)=>{
+  state.textAnimType = e.target.value;
+  persistSettings();
+});
+document.getElementById('animSpeedSlider').addEventListener('input', (e)=>{
+  state.animSpeed = parseInt(e.target.value, 10);
+  document.getElementById('animSpeedLabel').textContent = state.animSpeed + '%';
+  persistSettingsDebounced();
+});
+document.getElementById('toggleAutoSize').addEventListener('click', (e)=>{
+  const isOn = e.currentTarget.classList.toggle('on');
+  state.fontSizeMode = isOn ? 'auto' : 'manual';
+  if(isOn){
+    const autoSize = fontSizeFor(state.activeQuote || 'JUST ACT NOW.');
+    state.fontSizeManual = autoSize;
+    document.getElementById('fontSizeSlider').value = autoSize;
+    document.getElementById('fontSizeLabel').textContent = autoSize + 'px';
+    replayAnimation();
+  }
+  persistSettings();
+});
+document.getElementById('animalModeSelect').addEventListener('change', (e)=>{
+  state.animalPositionMode = e.target.value;
+  persistSettings();
+});
+document.getElementById('animalPosXSlider').addEventListener('input', (e)=>{
+  state.animalPosX = parseInt(e.target.value, 10);
+  document.getElementById('animalPosXLabel').textContent = state.animalPosX + '%';
+  if(state.animalPositionMode === 'fixed'){
+    animalState.x = W*(state.animalPosX/100); animalState.targetX = animalState.x;
+  }
+  persistSettingsDebounced();
+});
+document.getElementById('animalPosYSlider').addEventListener('input', (e)=>{
+  state.animalPosY = parseInt(e.target.value, 10);
+  document.getElementById('animalPosYLabel').textContent = state.animalPosY + '%';
+  if(state.animalPositionMode === 'fixed'){
+    animalState.y = H*(state.animalPosY/100); animalState.targetY = animalState.y;
+  }
+  persistSettingsDebounced();
+});
+document.getElementById('animalSizeSlider').addEventListener('input', (e)=>{
+  state.animalSize = parseInt(e.target.value, 10);
+  document.getElementById('animalSizeLabel').textContent = state.animalSize + 'px';
+  persistSettingsDebounced();
+});
+function bindSlider(elId, key, parseAsInt=true){
+  document.getElementById(elId).addEventListener('input', (e)=>{
+    state[key] = parseAsInt ? parseInt(e.target.value,10) : parseFloat(e.target.value);
+    persistSettingsDebounced();
+  });
+}
+bindSlider('typePitchSlider', 'clickPitch');
+bindSlider('typeVolumeSlider', 'clickVolume');
+bindSlider('chimePitchSlider', 'chimePitchMult');
+bindSlider('chimeVolumeSlider', 'chimeVolume');
+document.getElementById('btnReplay').addEventListener('click', replayAnimation);
+document.getElementById('btnDownload').addEventListener('click', downloadFinal);
+async function persistSettings(){
+  await DB.saveSettings({
+    template: state.template, highlightWord: state.highlightWord, animal: state.animal, captionAnimal: state.captionAnimal,
+    soundType: state.soundType, soundChime: state.soundChime,
+    animalPositionMode: state.animalPositionMode, animalEffects: state.animalEffects, animalSize: state.animalSize,
+    cardOrder: state.cardOrder,
+    fontFamily: state.fontFamily, fontSizeMode: state.fontSizeMode, fontSizeManual: state.fontSizeManual, backgroundStyle: state.backgroundStyle,
+    animalPosX: state.animalPosX, animalPosY: state.animalPosY, mergeLineMarkers: state.mergeLineMarkers,
+    videoDurationSec: state.videoDurationSec, textAnimType: state.textAnimType, animSpeed: state.animSpeed,
+    effectParams: state.effectParams,
+    endingLogo: state.endingLogo, clickPitch: state.clickPitch, clickVolume: state.clickVolume,
+    chimePitchMult: state.chimePitchMult, chimeVolume: state.chimeVolume,
+    customClickId: state.customClickId, customChimeId: state.customChimeId, outroWordSoundIds: state.outroWordSoundIds,
+  });
+  renderAnalytics();
+}
+function debounce(fn, delay){
+  let timer;
+  return (...args)=>{
+    clearTimeout(timer);
+    timer = setTimeout(()=> fn(...args), delay);
+  };
+}
+// Kaydırıcılar sürüklenirken saniyede onlarca "input" olayı ateşleniyor;
+// her seferinde veritabanına yazmak sunucuyu yorup hataya yol açıyordu.
+// Bu yüzden hızlı ayarlamalar 400ms boyunca birikip TEK bir kayıt olarak gönderiliyor.
+const persistSettingsDebounced = debounce(persistSettings, 400);
+
+/* ============================================================
+   EK EFEKTLER — her efektin kendi hız/yoğunluk ayarı
+   ============================================================ */
+const EFFECTS_META = [
+  { id:'glow',       label:'Parlaklık' },
+  { id:'wiggle',     label:'Sallanma' },
+  { id:'bounce',     label:'Zıplama' },
+  { id:'trail',      label:'Parıltı İzi' },
+  { id:'colorPulse', label:'Renk Nabzı' },
+  { id:'shake',      label:'Titreme' },
+  { id:'flip',       label:'Ters Çevirme' },
+  { id:'pulseScale', label:'Nabız (Boyut)' },
+];
+function fxSpeedOf(effectId){ return ((state.effectParams[effectId]||{}).speed ?? 100) / 100; }
+function fxIntensityOf(effectId){ return ((state.effectParams[effectId]||{}).intensity ?? 100) / 100; }
+
+let expandedEffect = null;
+function renderEffectsList(){
+  const wrap = document.getElementById('effectsList');
+  wrap.innerHTML = '';
+  EFFECTS_META.forEach(meta=>{
+    const on = !!state.animalEffects[meta.id];
+    const params = state.effectParams[meta.id] || { speed:100, intensity:100 };
+    const expanded = expandedEffect === meta.id;
+    const item = document.createElement('div');
+    item.className = 'effect-item';
+    item.innerHTML = `
+      <div class="effect-item-header">
+        <span>${meta.label}</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="fx-gear" data-gear="${meta.id}" title="Hız/Yoğunluk ayarla">⚙</button>
+          <div class="switch ${on?'on':''}" data-toggle-effect="${meta.id}"><div class="dot"></div></div>
+        </div>
+      </div>
+      <div class="effect-item-controls" data-controls="${meta.id}" style="display:${expanded?'block':'none'};">
+        <label class="field">Hız <span class="fx-speed-label">${params.speed}%</span></label>
+        <input type="range" class="fx-speed-slider" data-effect="${meta.id}" min="50" max="200" step="5" value="${params.speed}" style="accent-color:var(--green);">
+        <label class="field">Yoğunluk <span class="fx-intensity-label">${params.intensity}%</span></label>
+        <input type="range" class="fx-intensity-slider" data-effect="${meta.id}" min="50" max="200" step="5" value="${params.intensity}" style="accent-color:var(--green);">
+      </div>`;
+    wrap.appendChild(item);
+  });
+}
+document.getElementById('effectsList').addEventListener('click', (e)=>{
+  const gear = e.target.closest('[data-gear]');
+  if(gear){
+    const id = gear.dataset.gear;
+    expandedEffect = (expandedEffect === id) ? null : id;
+    renderEffectsList();
+    return;
+  }
+  const sw = e.target.closest('[data-toggle-effect]'); if(!sw) return;
+  const id = sw.dataset.toggleEffect;
+  state.animalEffects[id] = !state.animalEffects[id];
+  sw.classList.toggle('on', state.animalEffects[id]);
+  persistSettings();
+});
+document.getElementById('effectsList').addEventListener('input', (e)=>{
+  const speedEl = e.target.closest('.fx-speed-slider');
+  const intensityEl = e.target.closest('.fx-intensity-slider');
+  const el = speedEl || intensityEl;
+  if(!el) return;
+  const id = el.dataset.effect;
+  if(!state.effectParams[id]) state.effectParams[id] = { speed:100, intensity:100 };
+  if(speedEl){
+    state.effectParams[id].speed = parseInt(speedEl.value,10);
+    el.closest('.effect-item-controls').querySelector('.fx-speed-label').textContent = state.effectParams[id].speed + '%';
+  } else {
+    state.effectParams[id].intensity = parseInt(intensityEl.value,10);
+    el.closest('.effect-item-controls').querySelector('.fx-intensity-label').textContent = state.effectParams[id].intensity + '%';
+  }
+  persistSettingsDebounced();
+});
+
+/* ============================================================
+   YAYINLA (Publish) — AI caption + hesap bilgileri + paylaşım
+   ============================================================ */
+function renderHashtags(){
+  const wrap = document.getElementById('hashtagChips');
+  wrap.innerHTML = (state.hashtags||[]).map(h=>{
+    const tag = h.startsWith('#') ? h : '#'+h;
+    return `<span class="hashtag-chip">${escapeHtml(tag)}</span>`;
+  }).join('');
+}
+async function generateStoryCaption(quoteText){
+  const animalObj = ANIMALS.find(a=>a.id===(state.captionAnimal || state.animal)) || ANIMALS[0];
+  const prompt = `Bir TikTok/Instagram Reels videosu için Türkçe, hikayeli/anlatı tonunda (bir andan yola çıkan, okuyanı içine çeken tarzda), motive edici bir açıklama (caption) yaz. Açıklama en az 4-6 cümle uzunluğunda olsun — önceki kısa tek-iki cümlelik versiyonların yaklaşık iki katı uzunlukta, doyurucu bir mini-hikaye gibi. Açıklama, aşağıdaki hayvanın karakterini/davranışını merkeze alan bir benzetme veya küçük bir sahne içermeli — hayvan sadece anılmasın, hikayenin parçası olsun. Tam olarak 5 adet ilgili hashtag üret, ne fazla ne eksik.
+Video temel sözü: "${quoteText}"
+Videodaki disiplin sembolü hayvan: ${animalObj.name} (${animalObj.blurb})
+Marka adı: just.act.now — kısa cümleler, gerekirse 1-2 emoji, abartısız.
+Sadece şu JSON formatında cevap ver, başka hiçbir açıklama veya markdown ekleme:
+{"caption": "...", "hashtags": ["a","b","c","d","e"]}`;
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, messages: [{ role: "user", content: prompt }] })
+  });
+  const data = await response.json();
+  const textBlock = (data.content||[]).find(c=>c.type==='text');
+  let raw = (textBlock ? textBlock.text : '').replace(/```json|```/g,'').trim();
+  const parsed = JSON.parse(raw);
+  return { caption: parsed.caption || '', hashtags: (parsed.hashtags || []).slice(0,5) };
+}
+
+async function autoCaptionForQuote(quoteId){
+  const q = state.quotes.find(x=>x.id===quoteId);
+  if(!q) return;
+  q.captionStatus = 'pending';
+  renderQuotes(); if(typeof renderVideosPanel === 'function') renderVideosPanel();
+  try{
+    const result = await generateStoryCaption(q.text);
+    q.caption = result.caption; q.hashtags = result.hashtags; q.captionStatus = 'ready';
+  }catch(e){
+    console.error(e);
+    q.captionStatus = 'error';
+  }
+  await DB.saveQuotes(state.quotes);
+  renderQuotes(); if(typeof renderVideosPanel === 'function') renderVideosPanel();
+}
+
+async function generateCaption(){
+  const btn = document.getElementById('btnGenCaption');
+  const statusEl = document.getElementById('publishStatus');
+  btn.disabled = true;
+  statusEl.textContent = 'Yapay zeka açıklama hazırlıyor...';
+  try{
+    const quote = state.activeQuote || 'JUST ACT NOW.';
+    const result = await generateStoryCaption(quote);
+    document.getElementById('captionText').value = result.caption;
+    state.hashtags = result.hashtags;
+    renderHashtags();
+    await persistPublish();
+    setStatus('Açıklama hazırlandı ✓', 'ok');
+  }catch(e){
+    console.error(e);
+    setStatus('Açıklama oluşturulamadı, tekrar dener misin?', 'err');
+  }
+  btn.disabled = false;
+}
+document.getElementById('btnGenCaption').addEventListener('click', generateCaption);
+
+document.getElementById('btnSaveAccounts').addEventListener('click', async ()=>{
+  await persistPublish();
+  document.getElementById('publishStatus').textContent = 'Hesap bilgileri kaydedildi.';
+});
+document.getElementById('captionText').addEventListener('change', persistPublish);
+
+async function persistPublish(){
+  await DB.savePublish({
+    tiktokHandle: document.getElementById('tiktokHandle').value.trim(),
+    instagramHandle: document.getElementById('instagramHandle').value.trim(),
+    caption: document.getElementById('captionText').value,
+    hashtags: state.hashtags,
+  });
+}
+
+function renderCaptionAnimalSelect(){
+  const sel = document.getElementById('captionAnimalSelect');
+  if(!sel) return;
+  sel.innerHTML = ANIMALS.map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
+  sel.value = state.captionAnimal || state.animal;
+}
+function updateCaptionAnimalContext(){
+  const el = document.getElementById('captionAnimalContext');
+  if(!el) return;
+  const animalObj = ANIMALS.find(a=>a.id===(state.captionAnimal || state.animal)) || ANIMALS[0];
+  el.textContent = `Video temanız: ${animalObj.emoji} ${animalObj.name} — ${animalObj.blurb}`;
+}
+document.getElementById('captionAnimalSelect').addEventListener('change', (e)=>{
+  state.captionAnimal = e.target.value;
+  persistSettings();
+  updateCaptionAnimalContext();
+});
+
+async function copyTextRobust(text){
+  // 1) modern Clipboard API
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){ /* devam et, alternatif yöntemi dene */ }
+  // 2) execCommand geri dönüşü (bazı sanal alan/iframe ortamlarında clipboard izni kısıtlı olabilir)
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok) return true;
+  }catch(e){ /* devam et */ }
+  return false;
+}
+document.getElementById('btnCopyCaption').addEventListener('click', async ()=>{
+  const caption = document.getElementById('captionText').value.trim();
+  const hashtagsStr = (state.hashtags||[]).map(h=>h.startsWith('#')?h:'#'+h).join(' ');
+  const full = caption + (hashtagsStr ? '\n\n' + hashtagsStr : '');
+  const ok = await copyTextRobust(full);
+  if(ok){
+    setStatus('Açıklama ve etiketler panoya kopyalandı ✓', 'ok', 'publishStatus');
+  } else {
+    const ta = document.getElementById('captionText');
+    ta.focus(); ta.select();
+    setStatus('Otomatik kopyalama engellendi — metin seçili, Ctrl+C (veya uzun basıp Kopyala) ile alabilirsin.', 'err', 'publishStatus');
+  }
+});
+
+/* ============================================================
+   OTOMATİK YAYIN PLANI — tarayıcı açıkken hatırlatır (gerçek arka plan
+   gönderimi için sunucu gerekir, bkz. proje klasöründeki yol haritası)
+   ============================================================ */
+/* ============================================================
+   ANA SAYFA — gerçek yerel verilerle kart panosu
+   ============================================================ */
+function renderDashboard(){
+  const grid = document.getElementById('dashGrid');
+  if(!grid) return;
+  const cards = [];
+  const total = state.videoLog.length;
+  const sharedAny = state.videoLog.filter(v=>v.sharedTikTok || v.sharedInstagram).length;
+  const sharedBoth = state.videoLog.filter(v=>v.sharedTikTok && v.sharedInstagram).length;
+  const unpublished = state.videoLog.filter(v=>!v.sharedTikTok && !v.sharedInstagram).length;
+  const draftQuotes = state.quotes.filter(q=> !state.videoLog.some(v=>v.quoteText===q.text)).length;
+  const pendingCaptions = state.quotes.filter(q=>q.captionStatus==='pending').length;
+  const tiktokOnly = state.videoLog.filter(v=>v.sharedTikTok && !v.sharedInstagram).length;
+  const igOnly = state.videoLog.filter(v=>v.sharedInstagram && !v.sharedTikTok).length;
+  const weekAgo = Date.now() - 7*24*60*60*1000;
+  const thisWeek = state.videoLog.filter(v=>v.timestamp >= weekAgo).length;
+
+  if(total === 0){
+    cards.push({ icon:'🎬', title:'Henüz video oluşturmadın.', sub:'Videolar sekmesinden bir söz ekle, otomatik açıklaması hazırlansın.' });
+  } else {
+    const latest = state.videoLog[state.videoLog.length-1];
+    if(latest.sharedTikTok && latest.sharedInstagram){
+      cards.push({ icon:'✅', title:`${total}. video hem Instagram hem TikTok'ta paylaşıldı`, sub: new Date(Math.max(latest.sharedTikTokAt||0, latest.sharedInstagramAt||0)).toLocaleString('tr-TR'), cls:'positive' });
+    } else if(latest.sharedTikTok || latest.sharedInstagram){
+      const missing = latest.sharedTikTok ? 'Instagram' : 'TikTok';
+      cards.push({ icon:'📤', title:`${total}. video paylaşıldı`, sub:`${missing}'da henüz paylaşmadın.` });
+    } else {
+      cards.push({ icon:'🕓', title:`${total}. video hazır, henüz paylaşılmadı`, sub:'Yayınla sekmesinden paylaşabilirsin.' });
+    }
+  }
+
+  cards.push({ icon:'📦', title:`${draftQuotes} taslak · ${total} oluşturulan · ${sharedAny} paylaşılan`, sub:'Videolar sekmesinde yayın listeni yönet.' });
+
+  if(thisWeek > 0){
+    cards.push({ icon:'📈', title:`Bu hafta ${thisWeek} video ürettin.`, sub: thisWeek >= 3 ? 'İyi tempo!' : 'Temposunu artırabilirsin.' });
+  }
+
+  if(unpublished > 0){
+    cards.push({ icon:'⏳', title:`${unpublished} video yayınlanmayı bekliyor.`, sub:'Yayınla sekmesinden gönder.' });
+  }
+
+  if(draftQuotes === 0 && state.quotes.length > 0){
+    cards.push({ icon:'⚠️', title:'Hemen yeni içerik oluşturmanız gerek, stok tükeniyor!', sub:'Tüm sözlerin videosu zaten oluşturulmuş.', cls:'urgent' });
+  } else if(draftQuotes > 0 && draftQuotes <= 2){
+    cards.push({ icon:'⚠️', title:`Stok azalıyor: sadece ${draftQuotes} taslak söz kaldı.`, sub:'Videolar sekmesinden yenilerini ekle.', cls:'urgent' });
+  } else if(draftQuotes > 2){
+    cards.push({ icon:'📝', title:`${draftQuotes} taslak söz videoya dönüştürülmeyi bekliyor.`, sub:'İçerik stoğun sağlam görünüyor.' });
+  }
+
+  if(pendingCaptions > 0){
+    cards.push({ icon:'✦', title:`${pendingCaptions} söz için açıklama hazırlanıyor...`, sub:'Yapay zeka hikaye tonunda 5 etiketli açıklama üretiyor.' });
+  }
+
+  if(tiktokOnly > 0 || igOnly > 0){
+    cards.push({ icon:'⚖️', title:`TikTok'ta ${tiktokOnly}, Instagram'da ${igOnly} tekil paylaşım.`, sub: sharedBoth>0 ? `${sharedBoth} video her ikisinde de var.` : 'Diğer platformu da denemeyi unutma.' });
+  }
+
+  cards.push({ icon:'🎵', title:`${state.effectSounds.length} ses efekti kütüphanende hazır.`, sub:'Editör → Sesler.' });
+
+  const followerCard = buildFollowerDashboardCard();
+  if(followerCard) cards.push(followerCard);
+
+  grid.innerHTML = '';
+  if(cards.length === 0){ grid.innerHTML = '<div class="dash-empty">Henüz gösterilecek bir şey yok.</div>'; return; }
+  cards.forEach(c=>{
+    const div = document.createElement('div');
+    div.className = 'dash-card' + (c.cls ? ' '+c.cls : '');
+    div.innerHTML = `<div class="dash-icon">${c.icon}</div><div><div class="dash-title">${escapeHtml(c.title)}</div><div class="dash-sub">${escapeHtml(c.sub||'')}</div></div>`;
+    grid.appendChild(div);
+  });
+}
+
+/* ============================================================
+   ANALİZ SEKMESİ — takipçi sayısı takibi (elle girilir)
+   ============================================================ */
+function nowLocalDatetimeValue(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+document.getElementById('btnAddFollower').addEventListener('click', async ()=>{
+  const dateEl = document.getElementById('followerDate');
+  const countEl = document.getElementById('followerCount');
+  const date = dateEl.value || nowLocalDatetimeValue();
+  const count = parseInt(countEl.value,10);
+  if(isNaN(count)) return;
+  state.followerLog = state.followerLog.filter(f=>f.date!==date);
+  state.followerLog.push({ date, count, enteredAt: Date.now() });
+  state.followerLog.sort((a,b)=> a.date.localeCompare(b.date));
+  await DB.saveFollowerLog(state.followerLog);
+  countEl.value = '';
+  dateEl.value = nowLocalDatetimeValue();
+  renderFollowerHistory();
+  if(appReady) renderDashboard();
+});
+function fmtFollowerDate(dt){
+  try{
+    const d = new Date(dt);
+    return d.toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }catch(e){ return dt; }
+}
+function renderFollowerHistory(){
+  const el = document.getElementById('followerHistory');
+  if(!el) return;
+  if(state.followerLog.length === 0){ el.innerHTML = '<div class="empty-note">Henüz veri girilmedi.</div>'; return; }
+  const sorted = state.followerLog.slice().sort((a,b)=> b.date.localeCompare(a.date));
+  const rows = sorted.map((f,i)=>{
+    const prev = sorted[i+1];
+    const delta = prev ? f.count - prev.count : null;
+    const deltaStr = delta === null ? '' : (delta >= 0 ? `+${delta}` : `${delta}`);
+    return `<tr><td>${fmtFollowerDate(f.date)}</td><td>${f.count.toLocaleString('tr-TR')}</td><td style="color:${delta>0?'var(--green)':delta<0?'var(--danger)':'var(--dim)'};">${deltaStr}</td></tr>`;
+  }).join('');
+  el.innerHTML = `<table class="stats-table"><thead><tr><th>Tarih &amp; Saat</th><th>Takipçi</th><th>Değişim</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function buildFollowerDashboardCard(){
+  if(state.followerLog.length === 0){
+    return { icon:'👥', title:'Takipçi verisi henüz yok.', sub:'Analiz sekmesinden ilk sayını gir, büyümeni burada göreyim.' };
+  }
+  const sorted = state.followerLog.slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const first = sorted[0], last = sorted[sorted.length-1];
+  if(sorted.length === 1){
+    return { icon:'👥', title:`Takipçi sayın: ${last.count.toLocaleString('tr-TR')}`, sub:`${fmtFollowerDate(last.date)} tarihli tek kayıt — bir tane daha girince büyüme görünecek.` };
+  }
+  const diff = last.count - first.count;
+  const pct = first.count > 0 ? ((diff/first.count)*100).toFixed(1) : '0';
+  const arrow = diff > 0 ? '📈' : (diff < 0 ? '📉' : '➖');
+  return {
+    icon: arrow,
+    title: `Takipçi sayınız ${fmtFollowerDate(first.date)} - ${fmtFollowerDate(last.date)} arasında %${pct} ${diff>=0?'arttı':'azaldı'}!`,
+    sub: `${first.count.toLocaleString('tr-TR')} → ${last.count.toLocaleString('tr-TR')} (${diff>=0?'+':''}${diff.toLocaleString('tr-TR')})`,
+    cls: diff>0 ? 'positive' : (diff<0 ? 'urgent' : '')
+  };
+}
+
+/* ============================================================
+   BAŞLANGIÇ
+   ============================================================ */
+(async function init(){
+ try{
+  const [quotes, settings, publish, effectSounds, videoLog, followerLog, animalSounds, animalSoundMarkers, presets] = await Promise.all([
+    DB.loadQuotes(), DB.loadSettings(), DB.loadPublish(), DB.loadEffectsIndex(),
+    DB.loadVideoLog(), DB.loadFollowerLog(), DB.loadAnimalSoundsIndex(), DB.loadAnimalSoundMarkers(), DB.loadPresets()
+  ]);
+  state.quotes = quotes; state.effectSounds = effectSounds;
+  state.videoLog = videoLog; state.followerLog = followerLog;
+  state.animalSounds = animalSounds; state.animalSoundMarkers = animalSoundMarkers;
+  state.presets = presets;
+  if(settings){
+    state.template = settings.template ?? state.template;
+    state.highlightWord = settings.highlightWord ?? state.highlightWord;
+    state.animal = settings.animal ?? state.animal;
+    state.captionAnimal = settings.captionAnimal ?? settings.animal ?? state.captionAnimal;
+    state.soundType = settings.soundType ?? state.soundType;
+    state.soundChime = settings.soundChime ?? state.soundChime;
+    state.animalPositionMode = settings.animalPositionMode ?? (settings.animalTeleport ? 'teleport' : state.animalPositionMode);
+    state.cardOrder = settings.cardOrder ?? state.cardOrder;
+    state.fontFamily = settings.fontFamily ?? state.fontFamily;
+    state.fontSizeMode = settings.fontSizeMode ?? state.fontSizeMode;
+    state.fontSizeManual = settings.fontSizeManual ?? state.fontSizeManual;
+    state.backgroundStyle = settings.backgroundStyle ?? state.backgroundStyle;
+    state.animalPosX = settings.animalPosX ?? state.animalPosX;
+    state.animalPosY = settings.animalPosY ?? state.animalPosY;
+    state.mergeLineMarkers = settings.mergeLineMarkers ?? state.mergeLineMarkers;
+    state.videoDurationSec = settings.videoDurationSec ?? state.videoDurationSec;
+    state.textAnimType = settings.textAnimType ?? state.textAnimType;
+    state.animSpeed = settings.animSpeed ?? state.animSpeed;
+    state.animalSize = settings.animalSize ?? state.animalSize;
+    state.animalEffects = settings.animalEffects ?? state.animalEffects;
+    state.effectParams = settings.effectParams ?? state.effectParams;
+    state.endingLogo = settings.endingLogo ?? state.endingLogo;
+    state.clickPitch = settings.clickPitch ?? state.clickPitch;
+    state.clickVolume = settings.clickVolume ?? state.clickVolume;
+    state.chimePitchMult = settings.chimePitchMult ?? state.chimePitchMult;
+    state.chimeVolume = settings.chimeVolume ?? state.chimeVolume;
+    state.customClickId = settings.customClickId ?? state.customClickId;
+    state.customChimeId = settings.customChimeId ?? state.customChimeId;
+    state.outroWordSoundIds = settings.outroWordSoundIds ?? state.outroWordSoundIds;
+  }
+  document.getElementById('templateSelect').value = state.template;
+  document.getElementById('templateTextInput').value = state.activeQuote;
+  document.getElementById('backgroundStyleSelect').value = state.backgroundStyle;
+  document.getElementById('fontFamilySelect').value = state.fontFamily;
+  document.getElementById('toggleAutoSize').classList.toggle('on', state.fontSizeMode === 'auto');
+  document.getElementById('fontSizeSlider').value = state.fontSizeManual;
+  document.getElementById('fontSizeLabel').textContent = state.fontSizeManual + 'px';
+  document.getElementById('animalPosXSlider').value = state.animalPosX;
+  document.getElementById('animalPosXLabel').textContent = state.animalPosX + '%';
+  document.getElementById('animalPosYSlider').value = state.animalPosY;
+  document.getElementById('animalPosYLabel').textContent = state.animalPosY + '%';
+  document.getElementById('highlightWord').value = state.highlightWord;
+  document.getElementById('toggleType').classList.toggle('on', state.soundType);
+  document.getElementById('toggleChime').classList.toggle('on', state.soundChime);
+  document.getElementById('animalModeSelect').value = state.animalPositionMode;
+  document.getElementById('toggleEndingLogo').classList.toggle('on', state.endingLogo);
+  document.getElementById('toggleMergeLines').classList.toggle('on', state.mergeLineMarkers);
+  document.getElementById('videoDurationSlider').value = state.videoDurationSec;
+  document.getElementById('textAnimTypeSelect').value = state.textAnimType;
+  document.getElementById('animSpeedSlider').value = state.animSpeed;
+  document.getElementById('animSpeedLabel').textContent = state.animSpeed + '%';
+  document.getElementById('videoDurationLabel').textContent = state.videoDurationSec + 'sn';
+  const rangeLabelInit = document.getElementById('animalSoundRangeLabel');
+  if(rangeLabelInit) rangeLabelInit.textContent = `(${state.videoDurationSec}sn video içinde)`;
+  document.getElementById('animalSizeSlider').value = state.animalSize;
+  document.getElementById('animalSizeLabel').textContent = state.animalSize + 'px';
+  document.getElementById('typePitchSlider').value = state.clickPitch;
+  document.getElementById('typeVolumeSlider').value = state.clickVolume;
+  document.getElementById('chimePitchSlider').value = state.chimePitchMult;
+  document.getElementById('chimeVolumeSlider').value = state.chimeVolume;
+  if(state.customClickId) preloadEffectBuffer(state.customClickId);
+  if(state.customChimeId) preloadEffectBuffer(state.customChimeId);
+  state.outroWordSoundIds.forEach(id=>{ if(id) preloadEffectBuffer(id); });
+  const markerSoundIds = new Set(state.animalSoundMarkers.map(m=>m.soundId));
+  markerSoundIds.forEach(id=> preloadAnimalSoundBuffer(id));
+  renderAnimalGrid();
+  renderEffectsList();
+  renderQuotes();
+  renderEffectSounds();
+  renderAnimalSounds();
+  replayAnimation();
+
+  if(publish){
+    document.getElementById('tiktokHandle').value = publish.tiktokHandle || 'just.act.now';
+    document.getElementById('instagramHandle').value = publish.instagramHandle || 'just.act.now';
+    document.getElementById('captionText').value = publish.caption || '';
+    state.hashtags = publish.hashtags || [];
+    renderHashtags();
+    const handle = publish.tiktokHandle || publish.instagramHandle || '';
+    const welcomeHandleEl = document.getElementById('welcomeHandle');
+    if(welcomeHandleEl && handle){
+      welcomeHandleEl.textContent = handle.startsWith('@') ? handle : '@'+handle;
+    }
+  }
+  updateLastVideoStatus();
+  renderFollowerHistory();
+  const fdEl = document.getElementById('followerDate');
+  if(fdEl) fdEl.value = nowLocalDatetimeValue();
+  renderCaptionAnimalSelect();
+  renderPresetList();
+  updateCaptionAnimalContext();
+  applyCardOrder();
+  initCardDragReorder();
+  appReady = true;
+  renderDashboard();
+ }catch(err){
+  console.error('Başlangıç (init) hatası:', err);
+  const statusEl = document.getElementById('status');
+  if(statusEl) setStatus('Başlangıç hatası: ' + err.message, 'err');
+  appReady = true;
+ }
+})();
+</script>
+</body>
+</html>
